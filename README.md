@@ -31,6 +31,7 @@ The application allows you to:
 - `static/`: Static files (CSS, JS, etc.)
 
 ## Dependencies
+- Python 3.10 or later
 - Django 5.0.2
 - PyMongo 4.6.1
 - Python-dotenv 1.0.1
