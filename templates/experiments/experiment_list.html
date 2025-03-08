@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title">Experiment Results</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Experiment</th>
+                        <th>Cursor Type</th>
+                        <th>Query Pattern</th>
+                        <th>Document Count</th>
+                        <th>Execution Time (s)</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for experiment in experiments %}
+                    <tr>
+                        <td>{{ experiment.experiment_name }}</td>
+                        <td>{{ experiment.cursor_type }}</td>
+                        <td>{{ experiment.query_pattern }}</td>
+                        <td>{{ experiment.document_count }}</td>
+                        <td>{{ experiment.execution_time|floatformat:3 }}</td>
+                        <td>{{ experiment.timestamp|date:"Y-m-d H:i:s" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">No experiments run yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="card-title">Performance Comparison</h5>
+    </div>
+    <div class="card-body">
+        <canvas id="comparisonChart"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const experiments = {{ experiments|safe }};
+    
+    if (experiments.length > 0) {
+        const ctx = document.getElementById('comparisonChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: experiments.map(e => e.cursor_type),
+                datasets: [{
+                    label: 'Execution Time (seconds)',
+                    data: experiments.map(e => e.execution_time),
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Time (seconds)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %} 
