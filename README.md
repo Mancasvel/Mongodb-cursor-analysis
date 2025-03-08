@@ -45,7 +45,7 @@ The application allows you to:
 
 2. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/Mancasvel/Mongodb-cursor-analysis
 cd mongodb-cursor-analysis
 ```
 
