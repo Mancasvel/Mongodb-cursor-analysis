@@ -8,25 +8,11 @@
           Una aplicación moderna para administrar cursores de MongoDB Atlas.
           Realiza operaciones CRUD y monitorea el rendimiento en tiempo real.
         </p>
-        <div class="d-flex flex-wrap gap-3">
-          <a href="/cursores" class="btn btn-primary btn-lg px-4">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20" class="me-2">
-              <path fill-rule="evenodd" d="M2.625 6.75a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875 0A.75.75 0 0 1 8.25 6h12a.75.75 0 0 1 0 1.5h-12a.75.75 0 0 1-.75-.75ZM2.625 12a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875 0a.75.75 0 0 1 .75-.75h12a.75.75 0 0 1 0 1.5h-12a.75.75 0 0 1-.75-.75Zm-4.875 5.25a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875 0a.75.75 0 0 1 .75-.75h12a.75.75 0 0 1 0 1.5h-12a.75.75 0 0 1-.75-.75Z" clip-rule="evenodd" />
-            </svg>
-            Ver Cursores
-          </a>
-          <a href="/dashboard" class="btn btn-outline-light btn-lg px-4">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20" class="me-2">
-              <path fill-rule="evenodd" d="M2.25 13.5a8.25 8.25 0 0 1 8.25-8.25.75.75 0 0 1 .75.75v6.75H18a.75.75 0 0 1 .75.75 8.25 8.25 0 0 1-16.5 0Z" clip-rule="evenodd" />
-              <path fill-rule="evenodd" d="M12.75 3a.75.75 0 0 1 .75-.75 8.25 8.25 0 0 1 8.25 8.25.75.75 0 0 1-.75.75h-7.5a.75.75 0 0 1-.75-.75V3Z" clip-rule="evenodd" />
-            </svg>
-            Ver Dashboard
-          </a>
-        </div>
+        
       </div>
       <div class="col-lg-5 text-center">
         <div class="hero-image-container">
-          <img src="public/images/mongo_db.png" alt="MongoDB" class="img-fluid" style="max-height: 250px; filter: brightness(0) invert(1);">
+          <img src="/images/mongo_db.png" alt="MongoDB" class="img-fluid" style="max-height: 250px; filter: brightness(0) invert(1);">
         </div>
       </div>
     </div>
@@ -53,7 +39,7 @@
           </div>
           <h4 class="card-title mb-3 fw-bold">CRUD de Cursores</h4>
           <p class="card-text text-muted mb-4">Crea, lee, actualiza y elimina cursores de manera sencilla e intuitiva.</p>
-          <a href="/cursores/nuevo" class="btn btn-primary stretched-link">Crear Cursor</a>
+          <button type="button" class="btn btn-primary w-100" onclick="window.location.href='/cursores/nuevo'">Crear Cursor</button>
         </div>
       </div>
     </div>
@@ -69,7 +55,7 @@
           </div>
           <h4 class="card-title mb-3 fw-bold">Dashboard en Tiempo Real</h4>
           <p class="card-text text-muted mb-4">Monitorea el rendimiento y visualiza estadísticas de operaciones en MongoDB.</p>
-          <a href="/dashboard" class="btn btn-success stretched-link">Ver Dashboard</a>
+          <button type="button" class="btn btn-success w-100" onclick="window.location.href='/dashboard'">Ver Dashboard</button>
         </div>
       </div>
     </div>
@@ -84,7 +70,7 @@
           </div>
           <h4 class="card-title mb-3 fw-bold">Benchmark de Consultas</h4>
           <p class="card-text text-muted mb-4">Realiza pruebas de rendimiento para optimizar tus consultas a MongoDB.</p>
-          <a href="/dashboard" class="btn btn-warning stretched-link text-white">Ejecutar Benchmark</a>
+          <button type="button" class="btn btn-warning w-100 text-white" onclick="window.location.href='/dashboard'">Ejecutar Benchmark</button>
         </div>
       </div>
     </div>
