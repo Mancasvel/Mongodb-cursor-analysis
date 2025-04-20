@@ -1,83 +1,285 @@
 /* Estilos personalizados */
+:root {
+  --primary: #4f46e5;
+  --primary-light: #6366f1;
+  --primary-dark: #4338ca;
+  --secondary: #64748b;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #0ea5e9;
+  --light: #f8fafc;
+  --dark: #1e293b;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+/* Estilos base */
 body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #f8f9fa;
+  background-color: #f8fafc;
+  font-family: var(--font-sans);
+  color: var(--gray-800);
+  line-height: 1.5;
 }
 
 .footer {
   margin-top: auto;
 }
 
+/* Rediseño de componentes comunes */
 .card {
   transition: all 0.3s ease;
-  border-radius: 1rem;
+  border-radius: var(--radius-lg);
   overflow: hidden;
+  border: none;
+  box-shadow: var(--shadow);
 }
 
 .card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06) !important;
-}
-
-.table {
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  border-radius: 5px;
-  overflow: hidden;
-}
-
-.btn-group .btn {
-  margin-right: 5px;
-}
-
-.pagination {
-  margin-top: 20px;
-}
-
-/* Hero UI específicos */
-.hover-card {
-  transition: all 0.3s ease;
-  border-radius: 1rem;
-}
-
-.hover-card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
-}
-
-.btn {
-  border-radius: 0.5rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.btn-lg {
-  font-weight: 500;
-  padding: 0.75rem 1.5rem;
-}
-
-.form-control-lg {
-  border-radius: 0.5rem;
+  box-shadow: var(--shadow-lg);
 }
 
 .card-header {
   border-bottom: none;
+  background: transparent;
+  padding: 1.25rem 1.5rem;
 }
 
-/* Mejoras para tablas */
+.table {
+  margin-bottom: 0;
+}
+
 .table-hover tbody tr:hover {
-  background-color: rgba(59, 130, 246, 0.05);
+  background-color: rgba(79, 70, 229, 0.05);
 }
 
-/* Mejoras para los iconos */
-svg {
+.table-hover tbody tr {
+  transition: all 0.2s ease;
+}
+
+.table th {
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+.btn {
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+
+.btn-outline-primary {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.btn-lg {
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+}
+
+.form-control {
+  border-radius: var(--radius-md);
+  border-color: var(--gray-300);
+  padding: 0.625rem 0.875rem;
+}
+
+.form-control:focus {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 0.25rem rgba(79, 70, 229, 0.25);
+}
+
+.form-control-lg {
+  border-radius: var(--radius-lg);
+  font-size: 1rem;
+  padding: 0.75rem 1rem;
+}
+
+/* Componentes personalizados */
+.hover-card {
+  transition: all 0.3s ease;
+  overflow: hidden;
+  z-index: 1;
+  position: relative;
+}
+
+.hover-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%);
+  z-index: -1;
+  transform: translateY(100%);
+  transition: transform 0.4s ease;
+}
+
+.hover-card:hover {
+  transform: translateY(-10px);
+  box-shadow: var(--shadow-lg);
+}
+
+.hover-card:hover::before {
+  transform: translateY(0);
+}
+
+/* Utilidades y animaciones */
+.badge {
+  padding: 0.35em 0.65em;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+}
+
+.bg-gradient-success {
+  background: linear-gradient(135deg, var(--success) 0%, #34d399 100%);
+}
+
+.bg-gradient-warning {
+  background: linear-gradient(135deg, var(--warning) 0%, #fbbf24 100%);
+}
+
+.bg-gradient-info {
+  background: linear-gradient(135deg, var(--info) 0%, #38bdf8 100%);
+}
+
+.text-primary {
+  color: var(--primary) !important;
+}
+
+.text-success {
+  color: var(--success) !important;
+}
+
+.text-warning {
+  color: var(--warning) !important;
+}
+
+.text-danger {
+  color: var(--danger) !important;
+}
+
+.bg-primary {
+  background-color: var(--primary) !important;
+}
+
+/* Navbar personalizada */
+.navbar {
+  box-shadow: var(--shadow);
+}
+
+.navbar-dark.bg-primary {
+  background: linear-gradient(90deg, var(--primary-dark) 0%, var(--primary) 100%) !important;
+}
+
+.navbar-brand {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.nav-link {
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+  color: #fff;
+}
+
+/* Estilos para páginas específicas */
+.page-header {
+  padding: 2rem 0;
+  margin-bottom: 2rem;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  color: white;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+/* Pie de página */
+.footer {
+  background-color: var(--gray-800);
+  color: var(--gray-300);
+  padding: 1.5rem 0;
+}
+
+.footer .text-muted {
+  color: var(--gray-400) !important;
+}
+
+/* Fondo animado con patrón */
+.pattern-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.pattern-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(var(--primary-light) 1px, transparent 0);
+  background-size: 30px 30px;
+  opacity: 0.1;
+  z-index: 0;
+}
+
+/* Efectos SVG */
+.svg-icon {
   vertical-align: -0.125em;
 }
 
-/* Responsive ajustments */
+/* Mejoras para tables en móviles */
 @media (max-width: 767.98px) {
   .btn-sm {
     padding: 0.25rem 0.5rem;
@@ -90,5 +292,9 @@ svg {
   
   .card-body {
     padding: 1rem;
+  }
+  
+  .table th, .table td {
+    padding: 0.75rem;
   }
 } 

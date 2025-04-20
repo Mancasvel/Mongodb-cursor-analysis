@@ -29,6 +29,7 @@
               <th>Edad</th>
               <th>Ciudad</th>
               <th>Fecha Creación</th>
+              <th class="text-center">Ejecutar</th>
               <th class="text-end pe-4">Acciones</th>
             </tr>
           </thead>
@@ -53,6 +54,18 @@
                     <path fill-rule="evenodd" d="M6.75 2.25A.75.75 0 0 1 7.5 3v1.5h9V3A.75.75 0 0 1 18 3v1.5h.75a3 3 0 0 1 3 3v11.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V7.5a3 3 0 0 1 3-3H6V3a.75.75 0 0 1 .75-.75Zm13.5 9a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5v7.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5v-7.5Z" clip-rule="evenodd" />
                   </svg>
                   <%= cursor.fechaCreacion.toLocaleDateString() %>
+                </td>
+                <td class="text-center">
+                  <button 
+                    class="btn btn-sm btn-outline-success execute-cursor" 
+                    data-cursor-id="<%= cursor._id %>"
+                    data-cursor-name="<%= cursor.nombre %>"
+                    data-bs-toggle="modal" 
+                    data-bs-target="#cursorResultModal">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                      <path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" />
+                    </svg>
+                  </button>
                 </td>
                 <td class="text-end pe-4">
                   <div class="btn-group" role="group">
@@ -121,4 +134,294 @@
       </div>
     <% } %>
   </div>
-</div> 
+</div>
+
+<!-- Modal para mostrar resultados del cursor -->
+<div class="modal fade" id="cursorResultModal" tabindex="-1" aria-labelledby="cursorResultModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title" id="cursorResultModalLabel">Ejecutando cursor...</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="loading-results" class="text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+          <p class="mt-3">Ejecutando cursor, por favor espere...</p>
+        </div>
+        <div id="cursor-results" class="d-none">
+          <div class="d-flex justify-content-between mb-4">
+            <div>
+              <h6 class="text-muted mb-1">Tiempo de ejecución</h6>
+              <h4 class="text-success mb-0"><span id="execution-time">0</span> ms</h4>
+            </div>
+            <div>
+              <h6 class="text-muted mb-1">Documentos recuperados</h6>
+              <h4 class="text-primary mb-0"><span id="documents-count">0</span></h4>
+            </div>
+          </div>
+          
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+              <h6 class="mb-0 fw-bold">Estadísticas de ejecución</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <div class="p-3 bg-light rounded">
+                    <h6 class="mb-2">Documentos examinados</h6>
+                    <h5 class="mb-0" id="docs-examined">0</h5>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <div class="p-3 bg-light rounded">
+                    <h6 class="mb-2">Documentos devueltos</h6>
+                    <h5 class="mb-0" id="docs-returned">0</h5>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <div class="p-3 bg-light rounded">
+                    <h6 class="mb-2">Uso de índices</h6>
+                    <h5 class="mb-0" id="index-used">No</h5>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <div class="p-3 bg-light rounded">
+                    <h6 class="mb-2">Tipo de operación</h6>
+                    <h5 class="mb-0" id="operation-type">find</h5>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Detalles técnicos del cursor -->
+              <div class="mt-4">
+                <h6 class="mb-3 fw-bold">Información del cursor MongoDB</h6>
+                <div class="table-responsive">
+                  <table class="table table-sm table-bordered">
+                    <tbody>
+                      <tr>
+                        <th style="width: 30%">ID del cursor</th>
+                        <td id="cursor-id" class="font-monospace">-</td>
+                      </tr>
+                      <tr>
+                        <th>Namespace</th>
+                        <td id="cursor-ns" class="font-monospace">-</td>
+                      </tr>
+                      <tr>
+                        <th>Consulta</th>
+                        <td id="cursor-query" class="font-monospace">-</td>
+                      </tr>
+                      <tr>
+                        <th>Batch Size</th>
+                        <td id="cursor-batch-size">-</td>
+                      </tr>
+                      <tr>
+                        <th>Número de lotes</th>
+                        <td id="cursor-batches">-</td>
+                      </tr>
+                      <tr>
+                        <th>Read Concern</th>
+                        <td id="cursor-read-concern">-</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sección educativa sobre cursores -->
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+              <h6 class="mb-0 fw-bold">¿Qué es un cursor en MongoDB?</h6>
+            </div>
+            <div class="card-body">
+              <p id="cursor-definition" class="mb-3"></p>
+              <p id="cursor-lifecycle" class="mb-3"></p>
+              
+              <h6 class="fw-bold mb-2">Ventajas de los cursores</h6>
+              <ul id="cursor-advantages" class="mb-3">
+              </ul>
+              
+              <h6 class="fw-bold mb-2">Métodos principales</h6>
+              <ul id="cursor-methods" class="mb-3">
+              </ul>
+            </div>
+          </div>
+          
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+              <h6 class="mb-0 fw-bold">Resultados</h6>
+              <div class="btn-group">
+                <button class="btn btn-sm btn-outline-primary" id="view-json">Vista JSON</button>
+                <button class="btn btn-sm btn-outline-primary active" id="view-table">Vista Tabla</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="table-view">
+                <div class="table-responsive">
+                  <table class="table table-hover" id="results-table">
+                    <thead>
+                      <tr>
+                        <th>Nombre</th>
+                        <th>Edad</th>
+                        <th>Ciudad</th>
+                        <th>Fecha Creación</th>
+                      </tr>
+                    </thead>
+                    <tbody id="results-tbody">
+                      <!-- Aquí se insertarán dinámicamente los resultados -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div id="json-view" class="d-none">
+                <pre class="bg-light p-3 rounded"><code id="json-results"></code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="error-message" class="alert alert-danger mt-3 d-none">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24" class="me-2">
+            <path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd" />
+          </svg>
+          <span id="error-text"></span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Script para manejar la ejecución del cursor -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const executeButtons = document.querySelectorAll('.execute-cursor');
+  
+  executeButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const cursorId = this.getAttribute('data-cursor-id');
+      const cursorName = this.getAttribute('data-cursor-name');
+      
+      // Actualizar título del modal
+      document.getElementById('cursorResultModalLabel').textContent = `Ejecutando cursor: ${cursorName}`;
+      
+      // Mostrar el loader y ocultar el resto
+      document.getElementById('loading-results').classList.remove('d-none');
+      document.getElementById('cursor-results').classList.add('d-none');
+      document.getElementById('error-message').classList.add('d-none');
+      
+      // Ejecutar el cursor
+      fetch(`/cursores/${cursorId}/ejecutar`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Error al ejecutar el cursor');
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Ocultar loader y mostrar resultados
+          document.getElementById('loading-results').classList.add('d-none');
+          document.getElementById('cursor-results').classList.remove('d-none');
+          
+          // Actualizar métricas básicas
+          document.getElementById('execution-time').textContent = data.stats.executionTime;
+          document.getElementById('documents-count').textContent = data.results.length;
+          document.getElementById('docs-examined').textContent = data.stats.docsExamined || 'N/A';
+          document.getElementById('docs-returned').textContent = data.stats.docsReturned || data.results.length;
+          document.getElementById('index-used').textContent = data.stats.indexUsed ? 'Sí' : 'No';
+          document.getElementById('operation-type').textContent = data.stats.operationType || 'find';
+          
+          // Actualizar detalles del cursor
+          if (data.stats.cursorInfo) {
+            document.getElementById('cursor-id').textContent = data.stats.cursorInfo.id || '-';
+            document.getElementById('cursor-ns').textContent = data.stats.cursorInfo.ns || '-';
+            document.getElementById('cursor-query').textContent = data.stats.cursorInfo.query || '-';
+            document.getElementById('cursor-batch-size').textContent = data.stats.cursorInfo.batchSize || '-';
+            document.getElementById('cursor-batches').textContent = data.stats.batches || '1';
+            document.getElementById('cursor-read-concern').textContent = data.stats.cursorInfo.readConcern || '-';
+          }
+          
+          // Actualizar sección educativa
+          if (data.cursorExplained) {
+            document.getElementById('cursor-definition').textContent = data.cursorExplained.definition || '';
+            document.getElementById('cursor-lifecycle').textContent = data.cursorExplained.lifecycle || '';
+            
+            // Limpiar y llenar ventajas
+            const advantagesList = document.getElementById('cursor-advantages');
+            advantagesList.innerHTML = '';
+            if (data.cursorExplained.advantages && data.cursorExplained.advantages.length) {
+              data.cursorExplained.advantages.forEach(advantage => {
+                const li = document.createElement('li');
+                li.textContent = advantage;
+                advantagesList.appendChild(li);
+              });
+            }
+            
+            // Limpiar y llenar métodos
+            const methodsList = document.getElementById('cursor-methods');
+            methodsList.innerHTML = '';
+            if (data.cursorExplained.methods && data.cursorExplained.methods.length) {
+              data.cursorExplained.methods.forEach(method => {
+                const li = document.createElement('li');
+                li.className = 'font-monospace';
+                li.textContent = method;
+                methodsList.appendChild(li);
+              });
+            }
+          }
+          
+          // Actualizar tabla
+          const tbody = document.getElementById('results-tbody');
+          tbody.innerHTML = '';
+          
+          data.results.forEach(result => {
+            const row = document.createElement('tr');
+            
+            // Formatear fecha
+            const fecha = new Date(result.fechaCreacion);
+            const fechaFormateada = fecha.toLocaleDateString();
+            
+            row.innerHTML = `
+              <td>${result.nombre}</td>
+              <td>${result.edad}</td>
+              <td>${result.ciudad}</td>
+              <td>${fechaFormateada}</td>
+            `;
+            
+            tbody.appendChild(row);
+          });
+          
+          // Actualizar vista JSON
+          document.getElementById('json-results').textContent = 
+            JSON.stringify(data.results, null, 2);
+        })
+        .catch(error => {
+          // Mostrar error
+          document.getElementById('loading-results').classList.add('d-none');
+          document.getElementById('error-message').classList.remove('d-none');
+          document.getElementById('error-text').textContent = error.message;
+        });
+    });
+  });
+  
+  // Cambiar entre vista de tabla y JSON
+  document.getElementById('view-json').addEventListener('click', function() {
+    document.getElementById('table-view').classList.add('d-none');
+    document.getElementById('json-view').classList.remove('d-none');
+    this.classList.add('active');
+    document.getElementById('view-table').classList.remove('active');
+  });
+  
+  document.getElementById('view-table').addEventListener('click', function() {
+    document.getElementById('json-view').classList.add('d-none');
+    document.getElementById('table-view').classList.remove('d-none');
+    this.classList.add('active');
+    document.getElementById('view-json').classList.remove('active');
+  });
+});
+</script> 

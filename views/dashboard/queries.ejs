@@ -1,0 +1,246 @@
+<!-- Historial Detallado de Consultas -->
+<div class="container py-5">
+  <!-- Encabezado -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="d-flex align-items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="28" height="28" class="text-primary me-3">
+          <path d="M11.625 16.5a1.875 1.875 0 1 0 0-3.75 1.875 1.875 0 0 0 0 3.75Z" />
+          <path fill-rule="evenodd" d="M5.625 1.5H9a3.75 3.75 0 0 1 3.75 3.75v1.875c0 1.036.84 1.875 1.875 1.875H16.5a3.75 3.75 0 0 1 3.75 3.75v7.875c0 1.035-.84 1.875-1.875 1.875H5.625a1.875 1.875 0 0 1-1.875-1.875V3.375c0-1.036.84-1.875 1.875-1.875Zm6 16.5c.66 0 1.277-.19 1.797-.518l1.048 1.048a.75.75 0 0 0 1.06-1.06l-1.047-1.048A3.375 3.375 0 1 0 11.625 18Z" clip-rule="evenodd" />
+          <path d="M14.25 5.25a5.23 5.23 0 0 0-1.279-3.434 9.768 9.768 0 0 1 6.963 6.963A5.23 5.23 0 0 0 16.5 7.5h-1.875a.375.375 0 0 1-.375-.375V5.25Z" />
+        </svg>
+        <h1 class="h2 mb-0 fw-bold">Historial de Consultas</h1>
+      </div>
+      <p class="text-muted mt-2 mb-0">Registro detallado de las consultas a MongoDB</p>
+    </div>
+    <div class="col-md-6 text-md-end mt-3 mt-md-0">
+      <a href="/dashboard" class="btn btn-outline-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18" class="me-1">
+          <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm-4.28 9.22a.75.75 0 0 0 0 1.06l3 3a.75.75 0 1 0 1.06-1.06l-1.72-1.72h5.69a.75.75 0 0 0 0-1.5h-5.69l1.72-1.72a.75.75 0 0 0-1.06-1.06l-3 3Z" clip-rule="evenodd" />
+        </svg>
+        Volver al Dashboard
+      </a>
+    </div>
+  </div>
+  
+  <!-- Tabla de Consultas -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3 border-0">
+      <div class="row align-items-center">
+        <div class="col">
+          <h5 class="mb-0 fw-bold">Todas las Consultas Registradas</h5>
+        </div>
+        <div class="col-auto">
+          <div class="badge bg-primary rounded-pill py-2 px-3">
+            Total: <%= queries.length %>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Operación</th>
+              <th scope="col">Colección</th>
+              <th scope="col">Consulta</th>
+              <th scope="col">Tiempo (ms)</th>
+              <th scope="col">Fecha y Hora</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (queries && queries.length > 0) { %>
+              <% queries.forEach((query, index) => { %>
+                <tr>
+                  <td><%= index + 1 %></td>
+                  <td>
+                    <% const opColor = query.operation === 'find' ? 'primary' : 
+                      (query.operation === 'update' ? 'warning' : 
+                      (query.operation === 'insert' ? 'success' : 
+                      (query.operation === 'delete' ? 'danger' : 'secondary'))) %>
+                    <span class="badge bg-<%= opColor %> rounded-pill"><%= query.operation %></span>
+                  </td>
+                  <td><%= query.collection %></td>
+                  <td>
+                    <button class="btn btn-sm btn-link p-0 text-decoration-none" 
+                           data-bs-toggle="tooltip" 
+                           data-bs-placement="top" 
+                           title="<%= query.query %>">
+                      <span class="text-truncate d-inline-block" style="max-width: 200px;"><%= query.query %></span>
+                    </button>
+                  </td>
+                  <td>
+                    <% const timeColor = query.time > 100 ? 'text-danger' : 
+                      (query.time > 50 ? 'text-warning' : 'text-success') %>
+                    <span class="<%= timeColor %> fw-semibold"><%= query.time.toFixed(2) %> ms</span>
+                  </td>
+                  <td><%= new Date(query.timestamp).toLocaleString() %></td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr>
+                <td colspan="6" class="text-center py-4">No hay consultas registradas todavía.</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Rendimiento por Tipo de Operación (Solo se muestra si hay datos) -->
+  <% if (queries && queries.length > 0) { %>
+    <div class="row mt-5">
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-white py-3 border-0">
+            <h5 class="mb-0 fw-bold">Tiempo Promedio por Operación</h5>
+          </div>
+          <div class="card-body">
+            <canvas id="avgTimeChart" height="250"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-white py-3 border-0">
+            <h5 class="mb-0 fw-bold">Distribución de Operaciones</h5>
+          </div>
+          <div class="card-body">
+            <canvas id="operationsDistChart" height="250"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<!-- Script para gráficos y tooltips -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Inicializar tooltips
+  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  tooltipTriggerList.map(function(tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+  });
+  
+  <% if (queries && queries.length > 0) { %>
+    // Preparar datos para gráficos
+    const queriesData = <%- JSON.stringify(queries) %>;
+    
+    // Agrupar por operación para tiempos promedio
+    const operationTimes = {};
+    const operationCounts = {};
+    
+    queriesData.forEach(query => {
+      if (!operationTimes[query.operation]) {
+        operationTimes[query.operation] = 0;
+        operationCounts[query.operation] = 0;
+      }
+      operationTimes[query.operation] += query.time;
+      operationCounts[query.operation]++;
+    });
+    
+    const operations = Object.keys(operationTimes);
+    const avgTimes = operations.map(op => (operationTimes[op] / operationCounts[op]).toFixed(2));
+    const counts = operations.map(op => operationCounts[op]);
+    
+    // Colores para las operaciones
+    const opColors = {
+      find: 'rgb(79, 70, 229)',
+      update: 'rgb(245, 158, 11)',
+      insert: 'rgb(16, 185, 129)',
+      delete: 'rgb(239, 68, 68)',
+      aggregate: 'rgb(107, 114, 128)',
+      count: 'rgb(6, 182, 212)'
+    };
+    
+    const defaultColor = 'rgb(107, 114, 128)';
+    const barColors = operations.map(op => opColors[op] || defaultColor);
+    
+    // Gráfico de tiempo promedio por operación
+    const avgTimeCtx = document.getElementById('avgTimeChart').getContext('2d');
+    new Chart(avgTimeCtx, {
+      type: 'bar',
+      data: {
+        labels: operations,
+        datasets: [{
+          label: 'Tiempo Promedio (ms)',
+          data: avgTimes,
+          backgroundColor: barColors,
+          borderColor: barColors.map(c => c.replace('rgb', 'rgba').replace(')', ', 1)')),
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Tiempo (ms)'
+            }
+          }
+        }
+      }
+    });
+    
+    // Gráfico de distribución de operaciones
+    const distCtx = document.getElementById('operationsDistChart').getContext('2d');
+    new Chart(distCtx, {
+      type: 'pie',
+      data: {
+        labels: operations,
+        datasets: [{
+          data: counts,
+          backgroundColor: barColors,
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+          }
+        }
+      }
+    });
+  <% } %>
+});
+</script>
+
+<!-- Estilos adicionales -->
+<style>
+  tbody tr:hover {
+    background-color: rgba(79, 70, 229, 0.05) !important;
+  }
+  
+  .btn-link {
+    color: #4f46e5;
+  }
+  
+  .text-primary {
+    color: #4f46e5 !important;
+  }
+  
+  .bg-primary {
+    background-color: #4f46e5 !important;
+  }
+  
+  .btn-outline-primary {
+    color: #4f46e5;
+    border-color: #4f46e5;
+  }
+  
+  .btn-outline-primary:hover {
+    background-color: #4f46e5;
+    border-color: #4f46e5;
+  }
+</style> 

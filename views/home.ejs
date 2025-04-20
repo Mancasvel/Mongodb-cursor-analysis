@@ -1,79 +1,166 @@
-<div class="row align-items-center justify-content-center">
-  <div class="col-md-10 text-center">
-    <div class="card shadow border-0 mb-5">
-      <div class="card-body p-5">
-        <div class="mb-4">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="text-primary mb-2" width="64" height="64">
-            <path d="M11.7 2.805a.75.75 0 0 1 .6 0A60.65 60.65 0 0 1 22.83 8.72a.75.75 0 0 1-.231 1.337 49.94 49.94 0 0 0-9.902 3.912l-.003.002c-.114.06-.227.119-.34.175a.75.75 0 0 1-.707 0A50.009 50.009 0 0 0 1.73 10.057a.75.75 0 0 1-.231-1.337A60.653 60.653 0 0 1 11.7 2.805Z" />
-            <path d="M13.06 15.473a48.45 48.45 0 0 1 7.666-3.282c.134 1.414.22 2.843.255 4.284a.75.75 0 0 1-.46.711 47.87 47.87 0 0 0-8.105 4.342.75.75 0 0 1-.832 0 47.87 47.87 0 0 0-8.104-4.342.75.75 0 0 1-.461-.71c.035-1.442.121-2.87.255-4.286.921.304 1.83.634 2.726.99v1.27a1.5 1.5 0 0 0-.14 2.508c-.09.38-.222.753-.397 1.11.452.213.901.434 1.346.66a6.727 6.727 0 0 0 .551-1.607 1.5 1.5 0 0 0 .14-2.67v-.645a48.549 48.549 0 0 1 3.44 1.667 2.25 2.25 0 0 0 2.12 0 48.549 48.549 0 0 1 3.44-1.667v.645a1.5 1.5 0 0 0 .14 2.67c.09.51.252 1.075.551 1.607.444-.226.894-.447 1.345-.66a8.656 8.656 0 0 0-.397-1.11 1.5 1.5 0 0 0-.14-2.508v-1.27c.896-.358 1.806-.688 2.726-.99Z" />
-          </svg>
-        </div>
-        <h1 class="display-4 mb-4 fw-bold">Gestión de Cursores MongoDB</h1>
-        <p class="lead mb-4">
-          Aplicación web para administrar cursores de MongoDB Atlas.
-          Esta aplicación te permite realizar operaciones CRUD sobre los registros de cursores
-          de manera sencilla y con una interfaz moderna.
+<!-- Banner principal con background animado -->
+<div class="bg-dark pattern-bg text-white py-5">
+  <div class="container py-5">
+    <div class="row align-items-center">
+      <div class="col-lg-7 mb-5 mb-lg-0">
+        <h1 class="display-3 fw-bold mb-4">Gestión de Cursores MongoDB</h1>
+        <p class="lead mb-4 opacity-75">
+          Una aplicación moderna para administrar cursores de MongoDB Atlas.
+          Realiza operaciones CRUD y monitorea el rendimiento en tiempo real.
         </p>
-        <div class="d-grid gap-3 d-md-flex justify-content-md-center">
-          <a href="/cursores" class="btn btn-primary btn-lg px-4 me-md-2">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="d-inline-block align-text-top me-2" width="20" height="20">
+        <div class="d-flex flex-wrap gap-3">
+          <a href="/cursores" class="btn btn-primary btn-lg px-4">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20" class="me-2">
               <path fill-rule="evenodd" d="M2.625 6.75a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875 0A.75.75 0 0 1 8.25 6h12a.75.75 0 0 1 0 1.5h-12a.75.75 0 0 1-.75-.75ZM2.625 12a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875 0a.75.75 0 0 1 .75-.75h12a.75.75 0 0 1 0 1.5h-12a.75.75 0 0 1-.75-.75Zm-4.875 5.25a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875 0a.75.75 0 0 1 .75-.75h12a.75.75 0 0 1 0 1.5h-12a.75.75 0 0 1-.75-.75Z" clip-rule="evenodd" />
             </svg>
             Ver Cursores
           </a>
-          <a href="/cursores/nuevo" class="btn btn-outline-primary btn-lg px-4">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="d-inline-block align-text-top me-2" width="20" height="20">
-              <path fill-rule="evenodd" d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd" />
+          <a href="/dashboard" class="btn btn-outline-light btn-lg px-4">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20" class="me-2">
+              <path fill-rule="evenodd" d="M2.25 13.5a8.25 8.25 0 0 1 8.25-8.25.75.75 0 0 1 .75.75v6.75H18a.75.75 0 0 1 .75.75 8.25 8.25 0 0 1-16.5 0Z" clip-rule="evenodd" />
+              <path fill-rule="evenodd" d="M12.75 3a.75.75 0 0 1 .75-.75 8.25 8.25 0 0 1 8.25 8.25.75.75 0 0 1-.75.75h-7.5a.75.75 0 0 1-.75-.75V3Z" clip-rule="evenodd" />
             </svg>
-            Agregar Nuevo
+            Ver Dashboard
           </a>
         </div>
       </div>
-    </div>
-    
-    <div class="row mt-5">
-      <div class="col-md-4 mb-4">
-        <div class="card shadow-sm h-100 border-0 hover-card">
-          <div class="card-body p-4 text-center">
-            <div class="mb-3">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="text-success mb-2" width="48" height="48">
-                <path fill-rule="evenodd" d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd" />
-              </svg>
-            </div>
-            <h4 class="card-title mb-3">Crear</h4>
-            <p class="card-text text-muted">Agrega nuevos cursores con información detallada como nombre, edad y ciudad.</p>
-            <a href="/cursores/nuevo" class="btn btn-sm btn-outline-success mt-3">Crear Cursor</a>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4 mb-4">
-        <div class="card shadow-sm h-100 border-0 hover-card">
-          <div class="card-body p-4 text-center">
-            <div class="mb-3">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="text-warning mb-2" width="48" height="48">
-                <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
-              </svg>
-            </div>
-            <h4 class="card-title mb-3">Gestionar</h4>
-            <p class="card-text text-muted">Actualiza la información de los cursores existentes cuando sea necesario.</p>
-            <a href="/cursores" class="btn btn-sm btn-outline-warning mt-3">Ver Listado</a>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4 mb-4">
-        <div class="card shadow-sm h-100 border-0 hover-card">
-          <div class="card-body p-4 text-center">
-            <div class="mb-3">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="text-info mb-2" width="48" height="48">
-                <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 0 1 .67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 1 1-.671-1.34l.041-.022ZM12 9a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd" />
-              </svg>
-            </div>
-            <h4 class="card-title mb-3">Monitorear</h4>
-            <p class="card-text text-muted">Visualiza todos los cursores en una interfaz intuitiva y fácil de usar.</p>
-            <a href="/cursores" class="btn btn-sm btn-outline-info mt-3">Explorar</a>
-          </div>
+      <div class="col-lg-5 text-center">
+        <div class="hero-image-container">
+          <img src="https://mongodb-img.s3.amazonaws.com/MongoDB_Logo_FullColorBlack_RGB.png" alt="MongoDB" class="img-fluid" style="max-height: 250px; filter: brightness(0) invert(1);">
         </div>
       </div>
     </div>
   </div>
-</div> 
+</div>
+
+<div class="container py-5">
+  <!-- Características principales -->
+  <div class="row mb-5">
+    <div class="col-lg-6 offset-lg-3 text-center">
+      <h2 class="fw-bold mb-4">Funcionalidades Principales</h2>
+      <p class="lead text-muted mb-5">Gestiona tus cursores y monitorea el rendimiento de la base de datos en tiempo real</p>
+    </div>
+  </div>
+  
+  <div class="row mt-4">
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 animate-card border-0 shadow-sm hover-card">
+        <div class="card-body p-4 text-center">
+          <div class="icon-box mb-4 mx-auto">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="text-primary" width="48" height="48">
+              <path fill-rule="evenodd" d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <h4 class="card-title mb-3 fw-bold">CRUD de Cursores</h4>
+          <p class="card-text text-muted mb-4">Crea, lee, actualiza y elimina cursores de manera sencilla e intuitiva.</p>
+          <a href="/cursores/nuevo" class="btn btn-primary stretched-link">Crear Cursor</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 animate-card border-0 shadow-sm hover-card">
+        <div class="card-body p-4 text-center">
+          <div class="icon-box mb-4 mx-auto">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="text-success" width="48" height="48">
+              <path fill-rule="evenodd" d="M2.25 13.5a8.25 8.25 0 0 1 8.25-8.25.75.75 0 0 1 .75.75v6.75H18a.75.75 0 0 1 .75.75 8.25 8.25 0 0 1-16.5 0Z" clip-rule="evenodd" />
+              <path fill-rule="evenodd" d="M12.75 3a.75.75 0 0 1 .75-.75 8.25 8.25 0 0 1 8.25 8.25.75.75 0 0 1-.75.75h-7.5a.75.75 0 0 1-.75-.75V3Z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <h4 class="card-title mb-3 fw-bold">Dashboard en Tiempo Real</h4>
+          <p class="card-text text-muted mb-4">Monitorea el rendimiento y visualiza estadísticas de operaciones en MongoDB.</p>
+          <a href="/dashboard" class="btn btn-success stretched-link">Ver Dashboard</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 animate-card border-0 shadow-sm hover-card">
+        <div class="card-body p-4 text-center">
+          <div class="icon-box mb-4 mx-auto">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="text-warning" width="48" height="48">
+              <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <h4 class="card-title mb-3 fw-bold">Benchmark de Consultas</h4>
+          <p class="card-text text-muted mb-4">Realiza pruebas de rendimiento para optimizar tus consultas a MongoDB.</p>
+          <a href="/dashboard" class="btn btn-warning stretched-link text-white">Ejecutar Benchmark</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Banner de rendimiento dinámico -->
+<div id="performance-banner" class="alert alert-warning fixed-bottom mb-0 rounded-0 text-center py-3 d-none">
+  <!-- Este banner se mostrará dinámicamente si la página carga lentamente -->
+</div>
+
+<!-- Estilos específicos para la página de inicio -->
+<style>
+  .pattern-bg {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  }
+  
+  .pattern-bg::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+      radial-gradient(rgba(255,255,255,0.1) 1px, transparent 0),
+      radial-gradient(rgba(255,255,255,0.1) 1px, transparent 0);
+    background-position: 0 0, 25px 25px;
+    background-size: 50px 50px;
+    opacity: 0.3;
+  }
+  
+  .icon-box {
+    width: 80px;
+    height: 80px;
+    background-color: rgba(79, 70, 229, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+  
+  .animate-card {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s ease;
+  }
+  
+  .animate-card.animate-in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .hover-card:hover .icon-box {
+    transform: scale(1.1);
+  }
+  
+  @media (max-width: 991.98px) {
+    .bg-dark.pattern-bg {
+      text-align: center;
+    }
+  }
+</style>
+
+<script>
+  // Activar la animación de las tarjetas
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+      document.querySelectorAll('.animate-card').forEach((card, index) => {
+        setTimeout(() => {
+          card.classList.add('animate-in');
+        }, 100 * index);
+      });
+    }, 300);
+  });
+</script> 
