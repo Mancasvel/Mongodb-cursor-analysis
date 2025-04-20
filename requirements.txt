@@ -1,7 +1,0 @@
-Django==5.0.2
-pymongo==4.6.1
-python-dotenv==1.0.1
-django-crispy-forms==2.1
-crispy-bootstrap4==2023.1
-pandas==2.2.0
-matplotlib==3.8.2 

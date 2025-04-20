@@ -1,0 +1,34 @@
+{
+  "name": "cursores-mongodb-app",
+  "version": "1.0.0",
+  "description": "Aplicación web para gestionar cursores con MongoDB Atlas",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "keywords": [
+    "mongodb",
+    "express",
+    "nodejs",
+    "mongoose",
+    "ejs",
+    "bootstrap"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@heroicons/react": "^2.2.0",
+    "bootstrap": "^5.3.0",
+    "dotenv": "^16.0.3",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "express-ejs-layouts": "^2.5.1",
+    "heroicons": "^2.2.0",
+    "method-override": "^3.0.0",
+    "mongoose": "^7.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}

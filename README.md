@@ -1,145 +1,87 @@
-# MongoDB Cursor Analysis
+# Gestión de Cursores MongoDB
 
-This project is a web-based application for analyzing and comparing different MongoDB cursor operations and their performance implications. Built with Django and PyMongo, it provides interactive visualizations and comparisons of various query patterns and cursor behaviors.
+Aplicación web desarrollada con Node.js, Express, MongoDB Atlas y EJS para realizar operaciones CRUD sobre una colección de cursores.
 
-## Features
-- Different cursor operation analysis
-- Performance metrics visualization
-- Query pattern comparisons
-- Interactive data generation
-- Real-time performance monitoring
+## Características
 
-## Project Overview
+- Conexión a MongoDB Atlas
+- Operaciones CRUD completas (Crear, Leer, Actualizar, Eliminar)
+- Interfaz web responsive usando Bootstrap
+- Paginación de resultados
+- Validación de formularios
+- Manejo de errores
 
-The application allows you to:
-- Run different cursor experiments
-- Specify the number of documents to test with
-- View execution times in real-time
-- Compare performance between different cursor types
-- Track historical results
+## Requisitos
 
-### Cursor Types Available
-1. No cursor (direct list)
-2. Batch size cursor
-3. Limit cursor
-4. Skip + Limit cursor
+- Node.js (v14.x o superior)
+- NPM o Yarn
+- Cuenta en MongoDB Atlas
 
-## Project Structure
-- `cursor_analysis/`: Main Django project directory
-- `experiments/`: Django app for cursor experiments
-- `templates/`: HTML templates
-- `static/`: Static files (CSS, JS, etc.)
+## Instalación
 
-## Dependencies
-- Python 3.10 or later
-- Django 5.0.2
-- PyMongo 4.6.1
-- Python-dotenv 1.0.1
-- Django-crispy-forms 2.1
-- Crispy-bootstrap4 2023.1
-- Pandas 2.2.0
-- Matplotlib 3.8.2
+1. Clona el repositorio:
+   ```
+   git clone https://github.com/tu-usuario/cursores-mongodb-app.git
+   cd cursores-mongodb-app
+   ```
 
-## Setup Instructions
+2. Instala las dependencias:
+   ```
+   npm install
+   ```
 
-1. Make sure MongoDB is running locally on your machine
+3. Crea un archivo `.env` en la raíz del proyecto con la siguiente información:
+   ```
+   PORT=3000
+   MONGODB_URI=mongodb+srv://tu-usuario:tu-contraseña@tu-cluster.mongodb.net/cursoresDB?retryWrites=true&w=majority
+   ```
+   
+   Reemplaza los valores de conexión a MongoDB Atlas con los de tu cuenta.
 
-2. Clone the repository:
-```bash
-git clone https://github.com/Mancasvel/Mongodb-cursor-analysis
-cd mongodb-cursor-analysis
+## Uso
+
+1. Inicia la aplicación:
+   ```
+   npm start
+   ```
+
+2. Abre tu navegador y visita: `http://localhost:3000`
+
+3. Para desarrollo con recarga automática, usa:
+   ```
+   npm run dev
+   ```
+
+## Estructura del Proyecto
+
+```
+.
+├── app.js              # Archivo principal
+├── models/             # Modelos de Mongoose
+│   └── Cursor.js       # Modelo de cursor
+├── views/              # Vistas EJS
+│   ├── layouts/        # Layouts para las vistas
+│   ├── cursores/       # Vistas para cursores
+│   ├── error.ejs       # Página de error
+│   └── home.ejs        # Página principal
+├── public/             # Archivos estáticos
+│   ├── css/            # Hojas de estilo
+│   └── js/             # Scripts de cliente
+├── routes/             # Definición de rutas
+│   └── cursores.js     # Rutas para cursores
+├── package.json        # Dependencias y scripts
+└── .env                # Variables de entorno
 ```
 
-3. Create a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
+## Operaciones Disponibles
 
-4. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+- **GET /cursores**: Muestra la lista de todos los cursores con paginación
+- **GET /cursores/nuevo**: Muestra el formulario para crear un nuevo cursor
+- **POST /cursores**: Crea un nuevo cursor
+- **GET /cursores/:id/editar**: Muestra el formulario para editar un cursor
+- **PUT /cursores/:id**: Actualiza un cursor existente
+- **DELETE /cursores/:id**: Elimina un cursor
 
-5. Create a `.env` file in the root directory with your MongoDB connection string and Django secret key:
-```
-MONGODB_URI=mongodb://localhost:27017/
-DJANGO_SECRET_KEY=your-secret-key-here
-```
+## Licencia
 
-6. Run migrations:
-```bash
-python manage.py makemigrations
-python manage.py migrate
-```
-
-7. Start the development server:
-```bash
-python manage.py runserver
-```
-
-Visit http://localhost:8000 to access the application.
-
-## Using the Application
-
-1. Home Page:
-   - Select a cursor type from the dropdown menu
-   - Specify the number of documents to test with
-   - Click "Run Experiment" to start the test
-   - View real-time results in the chart
-
-2. Results Page:
-   - Access historical results of all experiments
-   - View detailed metrics in the table
-   - Compare performance across different cursor types
-   - Analyze execution times through the bar chart visualization
-
-## Features in Detail
-
-### Cursor Types
-- **No Cursor (Direct List)**: Directly converts the cursor to a list
-- **Batch Size**: Uses cursor with specified batch size (100 documents)
-- **Limit**: Applies a limit to the number of documents retrieved
-- **Skip + Limit**: Demonstrates cursor behavior with skip and limit operations
-
-### Performance Metrics
-- Execution time
-- Document count
-- Query pattern
-- Timestamp of experiment
-
-### Visualizations
-- Real-time bar charts for individual experiments
-- Comparative bar charts for historical results
-- Detailed tabular view of all experiments
-
-## Security Notes
-- Never commit your `.env` file with sensitive information
-- Update the Django secret key in production
-- Configure MongoDB security settings appropriately
-
-## Troubleshooting
-
-1. MongoDB Connection Issues:
-   - Ensure MongoDB is running locally
-   - Verify the connection string in `.env`
-   - Check MongoDB port availability
-
-2. Django Setup Issues:
-   - Ensure all migrations are applied
-   - Check for proper virtual environment activation
-   - Verify all dependencies are installed
-
-3. Data Generation:
-   - The application automatically generates test data if needed
-   - You can modify the document structure in `experiments/views.py`
-
-## Contributing
-Feel free to contribute to this project by:
-- Submitting bug reports
-- Proposing new features
-- Creating pull requests
-- Improving documentation
-
-## License
-This project is licensed under the terms specified in the LICENSE file.
+ISC 
