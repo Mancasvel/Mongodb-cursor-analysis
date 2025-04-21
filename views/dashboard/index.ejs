@@ -244,19 +244,58 @@
   </div>
 </div>
 
+<!-- Explicación del Benchmark -->
+<div class="container mb-5">
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3 border-0">
+      <h5 class="mb-0 fw-bold">¿Qué es el Benchmark?</h5>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-lg-8">
+          <p>El <strong>Benchmark</strong> es una herramienta que ejecuta varias consultas de prueba en la base de datos MongoDB para medir su rendimiento en tiempo real. Al ejecutar el benchmark se realizan las siguientes operaciones:</p>
+          
+          <ol class="mb-4">
+            <li><strong>Consulta básica</strong>: Obtiene un número limitado de documentos sin ningún tipo de filtro u ordenamiento específico.</li>
+            <li><strong>Consulta con ordenamiento</strong>: Recupera documentos ordenados por fecha de creación, lo que permite evaluar el rendimiento de las operaciones de ordenamiento.</li>
+            <li><strong>Consulta con paginación</strong>: Utiliza las operaciones skip y limit para simular la paginación, midiendo el impacto en el rendimiento.</li>
+            <li><strong>Conteo de documentos</strong>: Cuenta el número total de documentos en la colección, una operación frecuente en aplicaciones.</li>
+            <li><strong>Agregación</strong>: Ejecuta una operación de agregación que agrupa documentos por ciudad, demostrando el rendimiento de las consultas analíticas.</li>
+          </ol>
+          
+          <p>Los resultados del benchmark proporcionan información valiosa sobre cómo responde la base de datos bajo diferentes tipos de carga, ayudando a identificar posibles cuellos de botella y oportunidades de optimización.</p>
+        </div>
+        <div class="col-lg-4">
+          <div class="alert alert-primary">
+            <h6 class="fw-bold">Beneficios del Benchmark</h6>
+            <ul class="mb-0">
+              <li>Mide el tiempo de respuesta de diferentes tipos de consultas</li>
+              <li>Compara rendimiento entre distintas operaciones</li>
+              <li>Ayuda a detectar problemas de rendimiento</li>
+              <li>Evalúa el impacto del volumen de datos</li>
+              <li>Facilita la optimización de consultas</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Scripts para los gráficos -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   // Datos para gráficos
-  const chartData = <%- JSON.stringify(chartData) %>;
+  const chartData = JSON.parse('<%- JSON.stringify(chartData) %>');
+  const operationsData = JSON.parse('<%- JSON.stringify(operationsData) %>');
   
   // Gráfico de tiempo de consultas
   const queryTimeCtx = document.getElementById('queryTimeChart').getContext('2d');
   new Chart(queryTimeCtx, {
     type: 'line',
     data: {
-      labels: Array.from({length: chartData.times.length}, (_, i) => `Consulta ${i+1}`),
+      labels: chartData.labels,
       datasets: [{
         label: 'Tiempo (ms)',
         data: chartData.times,
@@ -288,11 +327,6 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   
   // Operaciones por tipo
-  const operationsData = <%- JSON.stringify(Object.keys(operationsData).map(k => ({ 
-    operation: k, 
-    count: operationsData[k].count 
-  }))) %>;
-  
   const operationsCtx = document.getElementById('operationsChart').getContext('2d');
   new Chart(operationsCtx, {
     type: 'doughnut',
@@ -301,11 +335,11 @@ document.addEventListener('DOMContentLoaded', function() {
       datasets: [{
         data: operationsData.map(d => d.count),
         backgroundColor: [
-          'rgb(79, 70, 229)',
-          'rgb(245, 158, 11)',
-          'rgb(16, 185, 129)',
-          'rgb(239, 68, 68)',
-          'rgb(107, 114, 128)'
+          'rgb(79, 70, 229)', 
+          'rgb(16, 185, 129)', 
+          'rgb(245, 158, 11)', 
+          'rgb(239, 68, 68)',  
+          'rgb(107, 114, 128)' 
         ],
         borderWidth: 1
       }]

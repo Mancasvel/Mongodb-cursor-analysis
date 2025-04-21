@@ -34,6 +34,14 @@ router.get('/', async (req, res) => {
       operationsData[op].avgTime = operationsData[op].totalTime / operationsData[op].count;
     });
     
+    // Convertir a array para más fácil uso en la vista
+    const operationsArray = Object.keys(operationsData).map(op => ({
+      operation: op,
+      count: operationsData[op].count,
+      avgTime: operationsData[op].avgTime.toFixed(2),
+      totalTime: operationsData[op].totalTime.toFixed(2)
+    }));
+    
     // Datos del sistema MongoDB
     const dbStats = {
       dbName: mongoose.connection.db.databaseName,
@@ -42,15 +50,21 @@ router.get('/', async (req, res) => {
       port: mongoose.connection.port
     };
     
+    // Asegurar que los tiempos en el gráfico estén correctamente formateados
+    const recentQueries = stats.queries.slice(-10);
+    
     res.render('dashboard/index', {
       stats,
       totalCursores,
-      operationsData,
+      operationsData: operationsArray,
       dbStats,
       // Datos para gráficos
       chartData: {
-        labels: stats.queries.slice(-10).map(q => q.operation),
-        times: stats.queries.slice(-10).map(q => q.time.toFixed(2))
+        labels: recentQueries.map(q => {
+          const time = new Date(q.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          return `${q.operation} (${time})`;
+        }),
+        times: recentQueries.map(q => q.time.toFixed(2))
       }
     });
   } catch (error) {
@@ -73,6 +87,7 @@ router.get('/queries', (req, res) => {
 // Realizar consulta de prueba para medir rendimiento
 router.post('/benchmark', async (req, res) => {
   try {
+    const stats = getQueryStats();
     const startTime = performance.now();
     
     // Simular diferentes tipos de consultas
@@ -87,12 +102,26 @@ router.post('/benchmark', async (req, res) => {
     ]);
     
     const endTime = performance.now();
-    const benchmarkTime = endTime - startTime;
+    const benchmarkTime = parseFloat((endTime - startTime).toFixed(2));
+    
+    // Registrar el benchmark en las estadísticas de rendimiento
+    stats.queries.push({
+      operation: 'benchmark',
+      collection: 'multiple',
+      query: 'Benchmark completo',
+      time: benchmarkTime,
+      timestamp: new Date()
+    });
+    
+    // Actualizar estadísticas totales
+    stats.totalQueries++;
+    stats.avgTime = (stats.avgTime * (stats.queries.length - 1) + benchmarkTime) / stats.queries.length;
+    stats.maxTime = Math.max(stats.maxTime, benchmarkTime);
     
     res.json({
       success: true,
       message: 'Benchmark completado',
-      tiempo: benchmarkTime.toFixed(2),
+      tiempo: benchmarkTime,
       resultados: {
         basica: results[0].length,
         ordenada: results[1].length,
@@ -107,6 +136,64 @@ router.post('/benchmark', async (req, res) => {
       message: 'Error al realizar benchmark',
       error: error.message
     });
+  }
+});
+
+// Vista para poblar la base de datos
+router.get('/poblar', (req, res) => {
+  res.render('dashboard/poblar');
+});
+
+// Ruta para poblar la BD con datos de prueba
+router.post('/poblar', async (req, res) => {
+  try {
+    const { cantidad, ciudades } = req.body;
+    
+    // Validación básica
+    if (!cantidad || cantidad < 1 || cantidad > 1000) {
+      return res.status(400).json({ error: 'La cantidad debe estar entre 1 y 1000' });
+    }
+    
+    if (!ciudades || !Array.isArray(ciudades) || ciudades.length === 0) {
+      return res.status(400).json({ error: 'Debes seleccionar al menos una ciudad' });
+    }
+    
+    // Crear documentos de prueba
+    const nombres = ['Ana', 'Pedro', 'María', 'Juan', 'Lucía', 'Carlos', 'Sofía', 'Miguel', 'Laura', 'Pablo'];
+    const documentos = [];
+    
+    // Generar datos aleatorios
+    for (let i = 0; i < cantidad; i++) {
+      const nombre = nombres[Math.floor(Math.random() * nombres.length)];
+      const edad = Math.floor(Math.random() * 60) + 18; // Edades entre 18 y 77
+      const ciudad = ciudades[Math.floor(Math.random() * ciudades.length)];
+      
+      documentos.push({
+        nombre,
+        edad,
+        ciudad,
+        fecha: new Date()
+      });
+    }
+    
+    // Insertar documentos en la base de datos usando insertMany
+    // Nota: Esta operación no utiliza cursores. Los cursores son para lectura, no escritura.
+    await Cursor.insertMany(documentos);
+    
+    // Contar total de documentos en la colección
+    const totalDocumentos = await Cursor.countDocuments();
+    
+    // Enviar respuesta
+    res.json({
+      success: true,
+      mensaje: `Se han creado ${cantidad} documentos nuevos`,
+      totalDocumentos,
+      documentosCreados: cantidad
+    });
+    
+  } catch (error) {
+    console.error('Error al poblar la base de datos:', error);
+    res.status(500).json({ error: 'Error al poblar la base de datos' });
   }
 });
 

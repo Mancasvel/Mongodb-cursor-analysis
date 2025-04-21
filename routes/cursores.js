@@ -3,6 +3,7 @@ const router = express.Router();
 const Cursor = require('../models/Cursor');
 const { performance } = require('perf_hooks');
 const mongoose = require('mongoose');
+const { getQueryStats } = require('../middleware/performance');
 
 // Listar todos los cursores (con paginación)
 router.get('/', async (req, res) => {
@@ -130,6 +131,7 @@ router.delete('/:id', async (req, res) => {
 router.get('/:id/ejecutar', async (req, res) => {
   try {
     const cursorId = req.params.id;
+    const queryStats = getQueryStats();
     
     // Verificar que el cursor exista
     const cursorExiste = await Cursor.findById(cursorId);
@@ -178,7 +180,7 @@ router.get('/:id/ejecutar', async (req, res) => {
     usedIndexes = docsExamined <= docsReturned * 1.5; 
     
     const endTime = performance.now();
-    const executionTime = (endTime - startTime).toFixed(2);
+    const executionTime = parseFloat((endTime - startTime).toFixed(2));
     
     // En MongoDB real, estas estadísticas vendrían del comando explain()
     const stats = {
@@ -201,6 +203,20 @@ router.get('/:id/ejecutar', async (req, res) => {
         readConcern: "local"                                      // Nivel de consistencia de lectura
       }
     };
+    
+    // Registrar esta ejecución de cursor manualmente en las estadísticas generales
+    queryStats.queries.push({
+      operation: 'cursor.find',
+      collection: 'cursores',
+      query: JSON.stringify({ ciudad: cursorExiste.ciudad }),
+      time: executionTime,
+      timestamp: new Date()
+    });
+    
+    // Actualizar estadísticas totales
+    queryStats.totalQueries++;
+    queryStats.avgTime = (queryStats.avgTime * (queryStats.queries.length - 1) + executionTime) / queryStats.queries.length;
+    queryStats.maxTime = Math.max(queryStats.maxTime, executionTime);
     
     // Devolvemos los resultados junto con estadísticas detalladas
     res.json({
@@ -230,6 +246,20 @@ router.get('/:id/ejecutar', async (req, res) => {
     res.status(500).json({ 
       success: false, 
       error: error.message
+    });
+  }
+});
+
+// Endpoint para contar el total de cursores
+router.get('/cursor/count', async (req, res) => {
+  try {
+    const total = await Cursor.countDocuments();
+    res.json({ success: true, total });
+  } catch (error) {
+    console.error('Error al contar cursores:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
     });
   }
 });
