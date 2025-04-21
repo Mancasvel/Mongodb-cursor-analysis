@@ -336,7 +336,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadingMessage.id = 'loading-message';
     loadingMessage.className = 'alert alert-info mt-3';
     loadingMessage.innerHTML = '<strong>Procesando consulta...</strong> Esto puede tardar varios minutos si se está procesando un gran volumen de datos.';
-    document.getElementById('comparacion-form').appendChild(loadingMessage);
+    document.getElementById('comparar-form').appendChild(loadingMessage);
     
     // Construir datos de consulta
     const campo = document.querySelector('input[name="campo"]:checked').value;
