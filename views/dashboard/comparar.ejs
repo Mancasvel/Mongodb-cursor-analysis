@@ -1,0 +1,507 @@
+<!-- Vista de comparación de rendimiento entre consultas con/sin cursor -->
+<div class="bg-dark text-white py-4 position-relative overflow-hidden">
+  <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10">
+    <svg width="100%" height="100%" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+      <g fill="none" stroke="#4f46e5" stroke-width="2">
+        <path d="M769 229L1037 260.9M927 880L731 737 520 660 309 538 40 599 295 764"></path>
+        <path d="M320 340L40 599 380 737"></path>
+        <path d="M520 660L309 538"></path>
+        <path d="M520 660L295 764"></path>
+      </g>
+      <g fill="rgba(255,255,255,0.05)">
+        <circle cx="769" cy="229" r="5"></circle>
+        <circle cx="927" cy="880" r="5"></circle>
+        <circle cx="40" cy="599" r="5"></circle>
+        <circle cx="320" cy="340" r="5"></circle>
+        <circle cx="380" cy="737" r="5"></circle>
+      </g>
+    </svg>
+  </div>
+  <div class="container position-relative">
+    <div class="row align-items-center">
+      <div class="col-lg-8">
+        <h1 class="display-4 fw-bold mb-2">Comparativa de Cursores</h1>
+        <p class="lead opacity-75 mb-0">Análisis visual del rendimiento entre consultas con y sin cursores</p>
+      </div>
+      <div class="col-lg-4 text-lg-end">
+        <a href="/dashboard" class="btn btn-outline-light btn-lg mt-3 mt-lg-0">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20" class="me-2">
+            <path fill-rule="evenodd" d="M2.25 13.5a8.25 8.25 0 0 1 8.25-8.25.75.75 0 0 1 .75.75v6.75H18a.75.75 0 0 1 .75.75 8.25 8.25 0 0 1-16.5 0Z" clip-rule="evenodd" />
+            <path fill-rule="evenodd" d="M12.75 3a.75.75 0 0 1 .75-.75 8.25 8.25 0 0 1 8.25 8.25.75.75 0 0 1-.75.75h-7.5a.75.75 0 0 1-.75-.75V3Z" clip-rule="evenodd" />
+          </svg>
+          Volver al Dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container py-5">
+  <div class="row">
+    <!-- Formulario de consulta -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white py-3 border-0">
+          <h5 class="mb-0 fw-bold">Configuración de Consulta</h5>
+        </div>
+        <div class="card-body">
+          <form id="comparar-form">
+            <div class="mb-4">
+              <label class="form-label fw-medium">Campo de filtrado</label>
+              <div class="mb-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="campo" id="campo-ciudad" value="ciudad" checked>
+                  <label class="form-check-label" for="campo-ciudad">
+                    Ciudad
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="campo" id="campo-edad" value="edad">
+                  <label class="form-check-label" for="campo-edad">
+                    Edad
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Selector de ciudad (visible por defecto) -->
+            <div class="mb-4" id="valor-ciudad-container">
+              <label for="valor-ciudad" class="form-label fw-medium">Ciudad</label>
+              <select class="form-select" id="valor-ciudad" name="valor-ciudad">
+                <option value="">Todas las ciudades</option>
+                <% ciudades.forEach(ciudad => { %>
+                  <option value="<%= ciudad %>"><%= ciudad %></option>
+                <% }); %>
+              </select>
+            </div>
+            
+            <!-- Rango de edad (oculto por defecto) -->
+            <div class="mb-4 d-none" id="valor-edad-container">
+              <label for="valor-edad" class="form-label fw-medium">Edad mayor que</label>
+              <input type="number" class="form-control" id="valor-edad" name="valor-edad" value="30" min="0" max="100">
+            </div>
+            
+            <div class="mb-4">
+              <label for="limite" class="form-label fw-medium">Límite de documentos</label>
+              <input type="number" class="form-control" id="limite" name="limite" value="20" min="1" max="1000000">
+              <div class="form-text">Número máximo de documentos a consultar</div>
+            </div>
+            
+            <div class="mb-4">
+              <label for="batchSize" class="form-label fw-medium">Tamaño de lote (batchSize)</label>
+              <input type="number" class="form-control" id="batchSize" name="batchSize" value="5" min="1" max="1000">
+              <div class="form-text">Número de documentos por lote</div>
+            </div>
+            
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-primary btn-lg" id="btn-comparar">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20" class="me-2">
+                  <path fill-rule="evenodd" d="M6.72 5.66l11.62 11.62A8.25 8.25 0 0 0 6.72 5.66zm10.56 12.68L5.66 6.72a8.25 8.25 0 0 0 11.62 11.62zM5.105 5.106c3.807-3.808 9.98-3.808 13.788 0 3.808 3.807 3.808 9.98 0 13.788-3.807 3.808-9.98 3.808-13.788 0-3.808-3.807-3.808-9.98 0-13.788z" clip-rule="evenodd" />
+                </svg>
+                Comparar Rendimiento
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Resultados de comparación (inicialmente ocultos) -->
+    <div class="col-lg-8">
+      <div id="resultados" class="d-none">
+        <!-- Resumen -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-white py-3 border-0">
+            <h5 class="mb-0 fw-bold">Resumen de Rendimiento</h5>
+          </div>
+          <div class="card-body">
+            <div class="alert" id="resumen-mensaje">
+              <!-- Se llenará dinámicamente -->
+            </div>
+            
+            <div class="row text-center">
+              <div class="col-md-3 mb-3">
+                <div class="p-3 rounded-3 bg-primary-subtle">
+                  <h6 class="text-primary mb-1">Con Cursor</h6>
+                  <h3 id="tiempo-cursor" class="mb-0 fw-bold">-</h3>
+                  <small>milisegundos</small>
+                </div>
+              </div>
+              <div class="col-md-3 mb-3">
+                <div class="p-3 rounded-3 bg-danger-subtle">
+                  <h6 class="text-danger mb-1">Sin Cursor</h6>
+                  <h3 id="tiempo-nocursor" class="mb-0 fw-bold">-</h3>
+                  <small>milisegundos</small>
+                </div>
+              </div>
+              <div class="col-md-3 mb-3">
+                <div class="p-3 rounded-3 bg-success-subtle">
+                  <h6 class="text-success mb-1">Agregación</h6>
+                  <h3 id="tiempo-agregacion" class="mb-0 fw-bold">-</h3>
+                  <small>milisegundos</small>
+                </div>
+              </div>
+              <div class="col-md-3 mb-3">
+                <div class="p-3 rounded-3 bg-warning-subtle">
+                  <h6 class="text-warning mb-1">Cursor Nativo</h6>
+                  <h3 id="tiempo-nativecursor" class="mb-0 fw-bold">-</h3>
+                  <small>milisegundos</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Gráfico de barras -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-white py-3 border-0">
+            <h5 class="mb-0 fw-bold">Comparativa Visual</h5>
+          </div>
+          <div class="card-body">
+            <canvas id="comparacionChart" height="250"></canvas>
+          </div>
+        </div>
+        
+        <!-- Detalles de consulta -->
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white py-3 border-0">
+            <h5 class="mb-0 fw-bold">Detalles de la Consulta</h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <h6 class="fw-bold">Filtro aplicado:</h6>
+              <div id="filtro-aplicado" class="alert alert-light">-</div>
+            </div>
+            
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Método</th>
+                    <th>Tiempo (ms)</th>
+                    <th>Documentos</th>
+                    <th>Rendimiento</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="badge bg-primary">Con Cursor</span></td>
+                    <td id="detail-cursor-tiempo">-</td>
+                    <td id="detail-cursor-docs">-</td>
+                    <td id="detail-cursor-rendimiento">-</td>
+                  </tr>
+                  <tr>
+                    <td><span class="badge bg-danger">Sin Cursor</span></td>
+                    <td id="detail-nocursor-tiempo">-</td>
+                    <td id="detail-nocursor-docs">-</td>
+                    <td id="detail-nocursor-rendimiento">-</td>
+                  </tr>
+                  <tr>
+                    <td><span class="badge bg-success">Agregación</span></td>
+                    <td id="detail-agregacion-tiempo">-</td>
+                    <td id="detail-agregacion-docs">-</td>
+                    <td id="detail-agregacion-rendimiento">-</td>
+                  </tr>
+                  <tr>
+                    <td><span class="badge bg-warning">Cursor Nativo</span></td>
+                    <td id="detail-nativecursor-tiempo">-</td>
+                    <td id="detail-nativecursor-docs">-</td>
+                    <td id="detail-nativecursor-rendimiento">-</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Información inicial -->
+      <div id="info-inicial" class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white py-3 border-0">
+          <h5 class="mb-0 fw-bold">¿Qué es esta herramienta?</h5>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-info mb-4">
+            <div class="d-flex">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24" class="text-info me-3 flex-shrink-0">
+                <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm11.378-3.917c-.89-.777-2.366-.777-3.255 0a.75.75 0 01-.988-1.129c1.454-1.272 3.776-1.272 5.23 0 1.513 1.324 1.513 3.518 0 4.842a3.75 3.75 0 01-.837.552c-.676.328-1.028.774-1.028 1.152v.75a.75.75 0 01-1.5 0v-.75c0-1.279 1.06-2.107 1.875-2.502.182-.088.351-.199.503-.331.83-.727.83-1.857 0-2.584zM12 18a.75.75 0 100-1.5.75.75 0 000 1.5z" clip-rule="evenodd" />
+              </svg>
+              <div>
+                <h5 class="fw-bold mb-1">Análisis comparativo</h5>
+                <p class="mb-0">Esta herramienta permite comparar el rendimiento de consultas utilizando diferentes métodos de acceso a los datos en MongoDB.</p>
+              </div>
+            </div>
+          </div>
+          
+          <h5 class="fw-bold mb-3">Métodos de consulta evaluados:</h5>
+          
+          <div class="card mb-3">
+            <div class="card-body">
+              <h6 class="fw-bold text-primary">1. Consulta con Cursor Optimizado</h6>
+              <p class="mb-0">Utiliza un cursor MongoDB con optimizaciones clave: <strong>batchSize</strong> para controlar el procesamiento por lotes, <strong>lean()</strong> para reducir el overhead de los objetos, y <strong>sort()</strong> para aprovechar índices. Esta implementación procesa los documentos en pequeños lotes, lo que reduce la carga de memoria y mejora el rendimiento para grandes conjuntos de datos.</p>
+              <div class="mt-2">
+                <code>Cursor.find(filtro).limit(limit).batchSize(5).lean().sort({fechaCreacion: -1})</code>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card mb-3">
+            <div class="card-body">
+              <h6 class="fw-bold text-danger">2. Consulta Sin Cursor Optimizado</h6>
+              <p class="mb-0">Realiza una consulta básica que carga todos los documentos en memoria de una vez y los procesa como un único lote. Esta aproximación puede ser menos eficiente para conjuntos de datos grandes o cuando se realizan operaciones intensivas con cada documento.</p>
+              <div class="mt-2">
+                <code>Cursor.find(filtro).limit(limit).exec()</code>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-body">
+              <h6 class="fw-bold text-success">3. Consulta por Agregación</h6>
+              <p class="mb-0">Utiliza el framework de agregación de MongoDB para procesar los documentos. Este método permite realizar operaciones complejas directamente en el servidor de la base de datos, lo que puede reducir la transferencia de datos y mejorar el rendimiento en consultas analíticas.</p>
+              <div class="mt-2">
+                <code>Cursor.aggregate([{ $match: filtro }, { $limit: limite }])</code>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card mb-3">
+            <div class="card-body">
+              <h6 class="fw-bold text-warning">4. Cursor Nativo de MongoDB</h6>
+              <p class="mb-0">Utiliza el driver nativo de MongoDB para acceder directamente a la colección sin pasar por la capa de Mongoose. Este método puede ofrecer mejor rendimiento al eliminar el overhead de mapeo de objetos y validación de esquemas.</p>
+              <div class="mt-2">
+                <code>collection.find(filtro).limit(limit).sort({fechaCreacion: -1}).batchSize(batchSize)</code>
+              </div>
+            </div>
+          </div>
+          
+          <div class="alert alert-info mt-4">
+            <div class="d-flex">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24" class="text-info me-3 flex-shrink-0">
+                <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm11.378-3.917c-.89-.777-2.366-.777-3.255 0a.75.75 0 01-.988-1.129c1.454-1.272 3.776-1.272 5.23 0 1.513 1.324 1.513 3.518 0 4.842a3.75 3.75 0 01-.837.552c-.676.328-1.028.774-1.028 1.152v.75a.75.75 0 01-1.5 0v-.75c0-1.279 1.06-2.107 1.875-2.502.182-.088.351-.199.503-.331.83-.727.83-1.857 0-2.584zM12 18a.75.75 0 100-1.5.75.75 0 000 1.5z" clip-rule="evenodd" />
+              </svg>
+              <div>
+                <h5 class="fw-bold mb-1">¿Por qué usar cursores es importante?</h5>
+                <p class="mb-0">Los cursores son cruciales para la eficiencia en grandes conjuntos de datos. Permiten procesar documentos en lotes pequeños, reduciendo el uso de memoria y mejorando el tiempo de respuesta para el primer resultado. Además, combinados con índices apropiados, pueden mejorar drásticamente el rendimiento de las consultas.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts específicos para esta página -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Referencias a elementos DOM
+  const form = document.getElementById('comparar-form');
+  const btnComparar = document.getElementById('btn-comparar');
+  const resultados = document.getElementById('resultados');
+  const infoInicial = document.getElementById('info-inicial');
+  
+  // Contenedores de campos
+  const radioCampo = document.querySelectorAll('input[name="campo"]');
+  const valorCiudadContainer = document.getElementById('valor-ciudad-container');
+  const valorEdadContainer = document.getElementById('valor-edad-container');
+  
+  // Gráfico para comparación
+  let comparacionChart = null;
+  
+  // Cambiar campos de filtro según la selección
+  radioCampo.forEach(radio => {
+    radio.addEventListener('change', function() {
+      if (this.value === 'ciudad') {
+        valorCiudadContainer.classList.remove('d-none');
+        valorEdadContainer.classList.add('d-none');
+      } else if (this.value === 'edad') {
+        valorCiudadContainer.classList.add('d-none');
+        valorEdadContainer.classList.remove('d-none');
+      }
+    });
+  });
+  
+  // Manejar envío del formulario
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    // Mostrar estado de carga
+    btnComparar.disabled = true;
+    btnComparar.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Comparando...';
+    
+    // Mostrar mensaje de carga de larga duración
+    const loadingMessage = document.createElement('div');
+    loadingMessage.id = 'loading-message';
+    loadingMessage.className = 'alert alert-info mt-3';
+    loadingMessage.innerHTML = '<strong>Procesando consulta...</strong> Esto puede tardar varios minutos si se está procesando un gran volumen de datos.';
+    document.getElementById('comparacion-form').appendChild(loadingMessage);
+    
+    // Construir datos de consulta
+    const campo = document.querySelector('input[name="campo"]:checked').value;
+    let valor;
+    
+    if (campo === 'ciudad') {
+      valor = document.getElementById('valor-ciudad').value;
+    } else if (campo === 'edad') {
+      valor = parseInt(document.getElementById('valor-edad').value);
+    }
+    
+    const limite = document.getElementById('limite').value;
+    
+    try {
+      // Enviar petición al servidor - sin límite de tiempo
+      const response = await fetch('/cursores/comparar', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          filtro: valor ? { campo, valor } : null,
+          limite,
+          batchSize: document.getElementById('batchSize').value
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Mostrar resultados y ocultar info inicial
+        resultados.classList.remove('d-none');
+        infoInicial.classList.add('d-none');
+        
+        // Actualizar resumen
+        const resumenMensaje = document.getElementById('resumen-mensaje');
+        const metodaMasRapido = data.comparacion.metodaMasRapido;
+        
+        if (metodaMasRapido === 'cursor') {
+          resumenMensaje.className = 'alert alert-success';
+          resumenMensaje.innerHTML = `<strong>¡Cursor optimizado!</strong> ${data.comparacion.mensaje}`;
+        } else {
+          resumenMensaje.className = 'alert alert-warning';
+          resumenMensaje.innerHTML = `<strong>Cursor no optimizado:</strong> ${data.comparacion.mensaje}`;
+        }
+        
+        // Actualizar tiempos
+        document.getElementById('tiempo-cursor').textContent = data.resultados.conCursor.tiempo;
+        document.getElementById('tiempo-nocursor').textContent = data.resultados.sinCursor.tiempo;
+        document.getElementById('tiempo-agregacion').textContent = data.resultados.agregacion.tiempo;
+        document.getElementById('tiempo-nativecursor').textContent = data.resultados.cursorNativo.tiempo;
+        
+        // Actualizar detalles
+        document.getElementById('detail-cursor-tiempo').textContent = data.resultados.conCursor.tiempo + ' ms';
+        document.getElementById('detail-cursor-docs').textContent = data.resultados.conCursor.documentos;
+        document.getElementById('detail-cursor-rendimiento').textContent = data.resultados.conCursor.metodo;
+        
+        document.getElementById('detail-nocursor-tiempo').textContent = data.resultados.sinCursor.tiempo + ' ms';
+        document.getElementById('detail-nocursor-docs').textContent = data.resultados.sinCursor.documentos;
+        document.getElementById('detail-nocursor-rendimiento').textContent = data.resultados.sinCursor.metodo;
+        
+        document.getElementById('detail-agregacion-tiempo').textContent = data.resultados.agregacion.tiempo + ' ms';
+        document.getElementById('detail-agregacion-docs').textContent = data.resultados.agregacion.documentos;
+        document.getElementById('detail-agregacion-rendimiento').textContent = data.resultados.agregacion.metodo;
+        
+        document.getElementById('detail-nativecursor-tiempo').textContent = data.resultados.cursorNativo.tiempo + ' ms';
+        document.getElementById('detail-nativecursor-docs').textContent = data.resultados.cursorNativo.documentos;
+        document.getElementById('detail-nativecursor-rendimiento').textContent = data.resultados.cursorNativo.metodo;
+        
+        // Mostrar filtro aplicado
+        const filtroAplicadoElem = document.getElementById('filtro-aplicado');
+        const filtroStr = valor ? `${campo}: ${valor}` : 'Sin filtro (todos los documentos)';
+        filtroAplicadoElem.textContent = filtroStr;
+        
+        // Actualizar/Crear gráfico
+        const ctx = document.getElementById('comparacionChart').getContext('2d');
+        
+        // Destruir gráfico anterior si existe
+        if (comparacionChart) {
+          comparacionChart.destroy();
+        }
+        
+        // Crear nuevo gráfico
+        comparacionChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['Con Cursor', 'Sin Cursor', 'Agregación', 'Cursor Nativo'],
+            datasets: [{
+              label: 'Tiempo (ms)',
+              data: [
+                data.resultados.conCursor.tiempo,
+                data.resultados.sinCursor.tiempo,
+                data.resultados.agregacion.tiempo,
+                data.resultados.cursorNativo.tiempo
+              ],
+              backgroundColor: [
+                'rgba(79, 70, 229, 0.7)',
+                'rgba(220, 38, 38, 0.7)',
+                'rgba(16, 185, 129, 0.7)',
+                'rgba(245, 158, 11, 0.7)'
+              ],
+              borderColor: [
+                'rgb(79, 70, 229)',
+                'rgb(220, 38, 38)',
+                'rgb(16, 185, 129)',
+                'rgb(245, 158, 11)'
+              ],
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'top',
+              },
+              title: {
+                display: true,
+                text: 'Comparativa de Tiempos de Ejecución'
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Tiempo (ms)'
+                }
+              }
+            }
+          }
+        });
+      } else {
+        alert('Error: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error al realizar la comparación: ' + error.message);
+    } finally {
+      // Restaurar estado del botón
+      btnComparar.disabled = false;
+      btnComparar.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20" class="me-2"><path fill-rule="evenodd" d="M6.72 5.66l11.62 11.62A8.25 8.25 0 0 0 6.72 5.66zm10.56 12.68L5.66 6.72a8.25 8.25 0 0 0 11.62 11.62zM5.105 5.106c3.807-3.808 9.98-3.808 13.788 0 3.808 3.807 3.808 9.98 0 13.788-3.807 3.808-9.98 3.808-13.788 0-3.808-3.807-3.808-9.98 0-13.788z" clip-rule="evenodd" /></svg>Comparar Rendimiento';
+      
+      // Eliminar mensaje de carga
+      const loadingMessage = document.getElementById('loading-message');
+      if (loadingMessage) {
+        loadingMessage.remove();
+      }
+    }
+  });
+});
+</script>
+
+<!-- Agregar estilos adicionales -->
+<style>
+  .bg-primary-subtle {
+    background-color: rgba(79, 70, 229, 0.1);
+  }
+  .bg-danger-subtle {
+    background-color: rgba(220, 38, 38, 0.1);
+  }
+  .bg-success-subtle {
+    background-color: rgba(16, 185, 129, 0.1);
+  }
+  .bg-warning-subtle {
+    background-color: rgba(245, 158, 11, 0.1);
+  }
+</style> 

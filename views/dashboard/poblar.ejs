@@ -47,8 +47,17 @@
           <form id="poblar-form">
             <div class="mb-4">
               <label for="cantidad" class="form-label fw-medium">Cantidad de documentos a crear</label>
-              <input type="number" class="form-control form-control-lg" id="cantidad" name="cantidad" value="50" min="1" max="1000">
-              <div class="form-text">Número de registros aleatorios a generar (entre 1 y 1000)</div>
+              <input type="number" class="form-control form-control-lg" id="cantidad" name="cantidad" value="10000" min="1" max="100000">
+              <div class="form-text">Número de registros aleatorios a generar (entre 1 y 100,000)</div>
+              <div class="mt-2">
+                <div class="btn-group" role="group">
+                  <button type="button" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('cantidad').value='100'">100</button>
+                  <button type="button" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('cantidad').value='1000'">1,000</button>
+                  <button type="button" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('cantidad').value='10000'">10,000</button>
+                  <button type="button" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('cantidad').value='50000'">50,000</button>
+                  <button type="button" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('cantidad').value='100000'">100,000</button>
+                </div>
+              </div>
             </div>
             
             <div class="mb-4">
@@ -66,6 +75,27 @@
               </button>
             </div>
           </form>
+
+          <div id="progreso" class="mt-4 d-none">
+            <h4 class="mb-3">Generando datos...</h4>
+            <div class="progress" style="height: 25px;">
+              <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+            </div>
+            <p class="mt-2 text-center" id="progresoTexto">Preparando generación...</p>
+          </div>
+
+          <div class="card mt-4 bg-light-subtle border-0 shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title text-primary fw-bold"><i class="bi bi-info-circle-fill me-2"></i>¿Por qué necesitamos muchos datos?</h5>
+              <p>Los cursores de MongoDB muestran sus verdaderas ventajas cuando trabajamos con grandes volúmenes de datos:</p>
+              <ul>
+                <li><strong>Gestión de memoria:</strong> Con conjuntos pequeños de datos, cargar todo en memoria no supone un problema. Con miles de documentos, los cursores permiten procesar por lotes evitando sobrecargar la memoria.</li>
+                <li><strong>Rendimiento real:</strong> Las diferencias de rendimiento entre consultas con y sin cursor son más evidentes con conjuntos de datos grandes (>10,000 documentos).</li>
+                <li><strong>Procesamiento por lotes:</strong> Los cursores permiten iniciar el procesamiento mientras aún se están recuperando documentos, mejorando la experiencia en aplicaciones en tiempo real.</li>
+              </ul>
+              <p class="mb-0 text-muted fst-italic">Recomendamos generar al menos 10,000 documentos para una comparativa efectiva de rendimiento.</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

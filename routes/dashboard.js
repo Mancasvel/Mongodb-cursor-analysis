@@ -144,41 +144,177 @@ router.get('/poblar', (req, res) => {
   res.render('dashboard/poblar');
 });
 
+// Ruta para comparar rendimiento
+router.get('/comparar', async (req, res) => {
+  try {
+    // Obtener ciudades disponibles para el filtro
+    const ciudades = await Cursor.distinct('ciudad');
+    
+    // Obtener el límite de documentos de la consulta (por defecto 5000)
+    const limit = parseInt(req.query.limit) || 5000;
+    const batchSize = parseInt(req.query.batchSize) || 1000; // Tamaño de lote óptimo
+    
+    // Registramos el tiempo inicial para la consulta directa
+    const startDirect = process.hrtime();
+    
+    // Ejecutamos una consulta directa sin cursor (carga todo en memoria)
+    const resultDirect = await Cursor.find({}).limit(limit).lean();
+    
+    // Calculamos el tiempo de ejecución para la consulta directa
+    const endDirect = process.hrtime(startDirect);
+    const timeDirect = (endDirect[0] * 1e9 + endDirect[1]) / 1e6; // Convertimos a milisegundos
+    
+    // Registramos el tiempo inicial para la agregación
+    const startAggregation = process.hrtime();
+    
+    // Ejecutamos una agregación sin cursor (carga todo en memoria)
+    const resultAggregation = await Cursor.aggregate([
+      { $match: {} },
+      { $limit: limit }
+    ]);
+    
+    // Calculamos el tiempo de ejecución para la agregación
+    const endAggregation = process.hrtime(startAggregation);
+    const timeAggregation = (endAggregation[0] * 1e9 + endAggregation[1]) / 1e6;
+    
+    // Registramos el tiempo inicial para el cursor
+    const startCursor = process.hrtime();
+    
+    // Creamos un cursor optimizado para la consulta con un batch size adecuado
+    // Nota: en MongoDB los cursores por defecto tienen un batch size de 100
+    const cursor = Cursor.find({}).lean().cursor({ batchSize });
+    
+    // Variables para el proceso del cursor
+    let count = 0;
+    let resultCursor = [];
+    
+    // Procesamos el cursor manualmente con for-await
+    for await (const doc of cursor) {
+      resultCursor.push(doc);
+      count++;
+      if (count >= limit) break;
+    }
+    
+    // Calculamos el tiempo de ejecución para el cursor
+    const endCursor = process.hrtime(startCursor);
+    const timeCursor = (endCursor[0] * 1e9 + endCursor[1]) / 1e6;
+    
+    // Registramos el tiempo para la agregación con cursor
+    const startAggCursor = process.hrtime();
+    
+    // Usamos cursor para la agregación con la sintaxis correcta
+    const aggCursor = Cursor.aggregate([
+      { $match: {} },
+      { $limit: limit }
+    ]).cursor({ batchSize });  // La sintaxis correcta para cursor de agregación
+    
+    // Variables para el proceso del cursor de agregación
+    let countAgg = 0;
+    let resultAggCursor = [];
+    
+    // Procesamos el cursor de agregación
+    for await (const doc of aggCursor) {
+      resultAggCursor.push(doc);
+      countAgg++;
+      if (countAgg >= limit) break;
+    }
+    
+    // Calculamos el tiempo de ejecución para el cursor de agregación
+    const endAggCursor = process.hrtime(startAggCursor);
+    const timeAggCursor = (endAggCursor[0] * 1e9 + endAggCursor[1]) / 1e6;
+    
+    // Renderizamos la vista con los resultados
+    res.render('dashboard/comparar', {
+      title: 'Comparación de Rendimiento',
+      timeDirect,
+      timeAggregation,
+      timeCursor,
+      timeAggCursor,
+      countDirect: resultDirect.length,
+      countAggregation: resultAggregation.length,
+      countCursor: resultCursor.length,
+      countAggCursor: resultAggCursor.length,
+      limit,
+      batchSize,
+      ciudades
+    });
+    
+  } catch (error) {
+    console.error('Error al comparar rendimiento:', error);
+    // Reemplazar req.flash que no está disponible con un redirect simple
+    // req.flash('error', 'Error al realizar la comparación de rendimiento');
+    res.status(500).render('error', {
+      message: 'Error al realizar la comparación de rendimiento',
+      error
+    });
+  }
+});
+
 // Ruta para poblar la BD con datos de prueba
 router.post('/poblar', async (req, res) => {
   try {
     const { cantidad, ciudades } = req.body;
     
     // Validación básica
-    if (!cantidad || cantidad < 1 || cantidad > 1000) {
-      return res.status(400).json({ error: 'La cantidad debe estar entre 1 y 1000' });
+    if (!cantidad || cantidad < 1 || cantidad > 100000) {
+      return res.status(400).json({ error: 'La cantidad debe estar entre 1 y 100000' });
     }
     
     if (!ciudades || !Array.isArray(ciudades) || ciudades.length === 0) {
       return res.status(400).json({ error: 'Debes seleccionar al menos una ciudad' });
     }
     
-    // Crear documentos de prueba
-    const nombres = ['Ana', 'Pedro', 'María', 'Juan', 'Lucía', 'Carlos', 'Sofía', 'Miguel', 'Laura', 'Pablo'];
-    const documentos = [];
+    // Datos para generar documentos aleatorios
+    const nombres = ['Ana', 'Pedro', 'María', 'Juan', 'Lucía', 'Carlos', 'Sofía', 'Miguel', 'Laura', 'Pablo', 
+                    'Elena', 'Javier', 'Carmen', 'David', 'Raquel', 'Antonio', 'Isabel', 'Francisco', 'Sara', 'Manuel',
+                    'Cristina', 'José', 'Patricia', 'Luis', 'Rosa', 'Daniel', 'Marta', 'Alejandro', 'Beatriz', 'Fernando'];
     
-    // Generar datos aleatorios
-    for (let i = 0; i < cantidad; i++) {
-      const nombre = nombres[Math.floor(Math.random() * nombres.length)];
-      const edad = Math.floor(Math.random() * 60) + 18; // Edades entre 18 y 77
-      const ciudad = ciudades[Math.floor(Math.random() * ciudades.length)];
+    const apellidos = ['García', 'Rodríguez', 'González', 'Fernández', 'López', 'Martínez', 'Sánchez', 'Pérez', 'Gómez', 'Martín',
+                      'Jiménez', 'Ruiz', 'Hernández', 'Díaz', 'Moreno', 'Álvarez', 'Romero', 'Alonso', 'Gutiérrez', 'Navarro'];
+    
+    // Fecha de inicio (hace 1 año)
+    const fechaInicio = new Date();
+    fechaInicio.setFullYear(fechaInicio.getFullYear() - 1);
+    
+    // Tamaño del lote para inserción eficiente
+    const batchSize = 1000;
+    let totalInsertados = 0;
+    
+    console.time('Tiempo de inserción');
+    
+    // Insertar documentos en lotes para mayor eficiencia
+    for (let i = 0; i < cantidad; i += batchSize) {
+      // Determinar tamaño del lote actual
+      const currentBatchSize = Math.min(batchSize, cantidad - i);
+      const documentos = [];
       
-      documentos.push({
-        nombre,
-        edad,
-        ciudad,
-        fecha: new Date()
-      });
+      // Generar datos aleatorios para este lote
+      for (let j = 0; j < currentBatchSize; j++) {
+        const nombre = nombres[Math.floor(Math.random() * nombres.length)];
+        const apellido = apellidos[Math.floor(Math.random() * apellidos.length)];
+        const edad = Math.floor(Math.random() * 60) + 18; // Edades entre 18 y 77
+        const ciudad = ciudades[Math.floor(Math.random() * ciudades.length)];
+        
+        // Fecha aleatoria en el último año
+        const fechaAleatoria = new Date(fechaInicio.getTime() + Math.random() * (Date.now() - fechaInicio.getTime()));
+        
+        documentos.push({
+          nombre: `${nombre} ${apellido}`,
+          edad,
+          ciudad,
+          fechaCreacion: fechaAleatoria
+        });
+      }
+      
+      // Insertar lote actual
+      await Cursor.insertMany(documentos, { ordered: false });
+      totalInsertados += documentos.length;
+      
+      // Actualizar progreso en consola
+      console.log(`Progreso: ${Math.min(i + batchSize, cantidad)}/${cantidad} documentos insertados`);
     }
     
-    // Insertar documentos en la base de datos usando insertMany
-    // Nota: Esta operación no utiliza cursores. Los cursores son para lectura, no escritura.
-    await Cursor.insertMany(documentos);
+    console.timeEnd('Tiempo de inserción');
     
     // Contar total de documentos en la colección
     const totalDocumentos = await Cursor.countDocuments();
@@ -186,9 +322,9 @@ router.post('/poblar', async (req, res) => {
     // Enviar respuesta
     res.json({
       success: true,
-      mensaje: `Se han creado ${cantidad} documentos nuevos`,
+      mensaje: `Se han creado ${totalInsertados} documentos nuevos (${cantidad} solicitados)`,
       totalDocumentos,
-      documentosCreados: cantidad
+      documentosCreados: totalInsertados
     });
     
   } catch (error) {

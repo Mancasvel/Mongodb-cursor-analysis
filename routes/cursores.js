@@ -148,36 +148,49 @@ router.get('/:id/ejecutar', async (req, res) => {
     // En MongoDB, un cursor no devuelve todos los resultados de inmediato
     // sino que se obtienen en lotes (batch size) según se necesitan
     
-    // Simulamos la creación de un cursor real de MongoDB
-    // Normalmente, esto no ejecuta la consulta inmediatamente
-    const mongoQuery = Cursor.find({ 
+    // Definimos un tamaño de lote optimizado para el cursor
+    const batchSize = 20;
+    
+    // Acceder directamente a la colección para un rendimiento óptimo
+    const collection = mongoose.connection.db.collection('cursors');
+    
+    // Crear un cursor nativo con opciones optimizadas
+    const mongoCursor = collection.find({ 
       ciudad: cursorExiste.ciudad
-    });
-
-    // Definimos un tamaño de lote (batch size) para simular cómo MongoDB
-    // obtiene resultados en lotes para optimizar memoria y rendimiento
-    mongoQuery.batchSize(5);
+    }, {
+      // Proyección para seleccionar solo los campos necesarios
+      projection: { nombre: 1, edad: 1, ciudad: 1, fechaCreacion: 1 }
+    }).batchSize(batchSize);
     
-    // La consulta sólo se ejecuta cuando:
-    // 1. Se llama a .exec()
-    // 2. Se itera sobre el cursor (.forEach, for...of)
-    // 3. Se convierte a array (.toArray())
-    
-    // Para obtener métricas como lo haría el driver de MongoDB
+    // Estadísticas del cursor
     let docsExamined = 0;
     let docsReturned = 0;
-    let currentBatch = 1;
-    let usedIndexes = false;
+    let currentBatch = 0;
     
-    // Ejecutamos la consulta (esto activaría el cursor en MongoDB)
-    const cursorResultados = await mongoQuery.exec();
+    // Procesamos el cursor en batches para simular uso real
+    const cursorResultados = [];
+    let batch;
     
-    // Simulamos estadísticas que el driver de MongoDB proporcionaría
-    docsExamined = cursorResultados.length + Math.floor(Math.random() * 5); // Simula documentos escaneados
-    docsReturned = cursorResultados.length;
+    // Utilizamos el patrón de cursor óptimo: iterar en batches
+    while (await mongoCursor.hasNext()) {
+      batch = await mongoCursor.next();
+      cursorResultados.push(batch);
+      docsReturned++;
+      
+      // Incrementamos el número de lotes procesados
+      if (docsReturned % batchSize === 1) {
+        currentBatch++;
+      }
+      
+      // Limitamos a 100 documentos para la demostración
+      if (docsReturned >= 100) break;
+    }
+    
+    // Simulamos documentos examinados (en un caso real, esto vendría de explain())
+    docsExamined = docsReturned + Math.floor(Math.random() * 5);
     
     // Simulamos uso de índices basado en ciertos criterios
-    usedIndexes = docsExamined <= docsReturned * 1.5; 
+    const usedIndexes = docsExamined <= docsReturned * 1.5; 
     
     const endTime = performance.now();
     const executionTime = parseFloat((endTime - startTime).toFixed(2));
@@ -189,17 +202,16 @@ router.get('/:id/ejecutar', async (req, res) => {
       docsReturned: docsReturned,
       indexUsed: usedIndexes,
       operationType: 'find',
-      batchSize: 5,
+      batchSize: batchSize,
       batches: currentBatch,
       // Simulamos información adicional del cursor
       cursorInfo: {
         id: `${Date.now()}-${Math.floor(Math.random() * 10000)}`, // Simulamos un ID de cursor
         ns: `CBDDatabase.cursores`,                               // Namespace (database.collection)
         query: JSON.stringify({ ciudad: cursorExiste.ciudad }),   // La consulta ejecutada
-        limit: 0,                                                 // Sin límite aplicado
+        limit: 100,                                               // Límite aplicado
         skip: 0,                                                  // Sin salto aplicado
-        batchSize: 5,                                             // Tamaño de lote
-        maxTimeMS: 30000,                                         // Tiempo máximo de ejecución
+        batchSize: batchSize,                                     // Tamaño de lote
         readConcern: "local"                                      // Nivel de consistencia de lectura
       }
     };
@@ -230,13 +242,21 @@ router.get('/:id/ejecutar', async (req, res) => {
         advantages: [
           "Permite procesar grandes conjuntos de datos sin cargar todo en memoria",
           "Proporciona métodos para filtrar, ordenar y limitar resultados",
-          "Puede ser recorrido de forma iterativa para procesar documento por documento"
+          "Puede ser recorrido de forma iterativa para procesar documento por documento",
+          "Con un tamaño de lote (batchSize) óptimo, reduce el número de viajes a la base de datos"
         ],
         methods: [
           "batchSize() - Define cuántos documentos se recuperan en cada lote",
           "limit() - Limita el número de documentos a devolver",
           "skip() - Omite un número específico de documentos",
-          "sort() - Ordena los resultados por campos específicos"
+          "sort() - Ordena los resultados por campos específicos",
+          "project() - Selecciona sólo los campos necesarios para reducir el tamaño de los resultados"
+        ],
+        bestPractices: [
+          "Usa lean() para evitar la sobrecarga de los objetos Mongoose completos",
+          "Establece un batchSize adaptado a tu caso de uso (entre 100-1000 para conjuntos grandes)",
+          "Utiliza índices para mejorar el rendimiento de las consultas con cursor",
+          "Cierra explícitamente el cursor cuando ya no lo necesites para liberar recursos"
         ]
       }
     });
@@ -259,6 +279,204 @@ router.get('/cursor/count', async (req, res) => {
     console.error('Error al contar cursores:', error);
     res.status(500).json({ 
       success: false,
+      error: error.message 
+    });
+  }
+});
+
+// Comparar rendimiento entre consultas con y sin cursor
+router.post('/comparar', async (req, res) => {
+  try {
+    const { filtro, limite, batchSize } = req.body;
+    const queryStats = getQueryStats();
+    
+    // Validar parámetros
+    const limit = parseInt(limite) || 10;
+    const cursorBatchSize = parseInt(batchSize) || 100; // Aumentar el tamaño de lote predeterminado
+    let filter = {};
+    
+    // Construir filtro a partir de los parámetros
+    if (filtro && filtro.campo && filtro.valor) {
+      filter[filtro.campo] = filtro.valor;
+    }
+    
+    // Simular procesamiento intensivo para cada documento
+    // Esta función hace más evidente las diferencias de rendimiento entre métodos
+    const procesarDocumento = (doc) => {
+      // Simulación de procesamiento intensivo por documento
+      let result = { ...doc };
+      
+      // Realizar algunas operaciones costosas
+      for (let i = 0; i < 1000; i++) {
+        result._simulatedField = Math.sqrt(i) * Math.random();
+      }
+      
+      return result;
+    };
+    
+    // Consulta 1: Usando cursor optimizado correctamente
+    const startCursor = performance.now();
+    
+    // Crear un cursor nativo optimizado
+    const collection = mongoose.connection.db.collection('cursors');
+    const nativeCursor = collection.find(filter, {
+      projection: { nombre: 1, edad: 1, ciudad: 1, fechaCreacion: 1 }
+    }).limit(limit).sort({ fechaCreacion: -1 }).batchSize(cursorBatchSize);
+    
+    // Procesar los documentos de manera eficiente con streaming
+    const processedResultsCursor = [];
+    
+    // Usar for-await para iterar el cursor - esto es más eficiente que toArray()
+    for await (const doc of nativeCursor) {
+      processedResultsCursor.push(procesarDocumento(doc));
+      
+      // Si ya tenemos suficientes documentos, paramos
+      if (processedResultsCursor.length >= limit) {
+        break;
+      }
+    }
+    
+    const endCursor = performance.now();
+    const cursorTime = parseFloat((endCursor - startCursor).toFixed(2));
+    
+    // Consulta 2: Sin usar optimizaciones de cursor
+    const startNoCursor = performance.now();
+    const resultsNoCursor = await Cursor.find(filter).limit(limit).exec();
+    
+    // Procesar todos los documentos de una vez (simulando la carga en memoria)
+    const processedResultsNoCursor = resultsNoCursor.map(procesarDocumento);
+    
+    const endNoCursor = performance.now();
+    const noCursorTime = parseFloat((endNoCursor - startNoCursor).toFixed(2));
+    
+    // Consulta 3: Usando agregación para comparación adicional
+    const startAggregation = performance.now();
+    const resultsAggregation = await Cursor.aggregate([
+      { $match: filter },
+      { $limit: limit },
+      { $sort: { fechaCreacion: -1 } }
+    ]);
+    
+    // Procesar resultados de agregación
+    const processedResultsAggregation = resultsAggregation.map(procesarDocumento);
+    
+    const endAggregation = performance.now();
+    const aggregationTime = parseFloat((endAggregation - startAggregation).toFixed(2));
+    
+    // Consulta 4: Usando agregación con cursor
+    const startAggCursor = performance.now();
+    
+    // Crear un cursor de agregación
+    const aggCursor = Cursor.aggregate([
+      { $match: filter },
+      { $limit: limit },
+      { $sort: { fechaCreacion: -1 } }
+    ]).cursor();
+    
+    // Procesar resultados con cursor de agregación
+    const processedResultsAggCursor = [];
+    for await (const doc of aggCursor) {
+      processedResultsAggCursor.push(procesarDocumento(doc));
+    }
+    
+    const endAggCursor = performance.now();
+    const aggCursorTime = parseFloat((endAggCursor - startAggCursor).toFixed(2));
+    
+    // Registrar las consultas en las estadísticas para análisis histórico
+    // Consulta con cursor
+    queryStats.queries.push({
+      operation: 'cursor.find',
+      collection: 'cursores',
+      query: JSON.stringify(filter),
+      time: cursorTime,
+      timestamp: new Date()
+    });
+    
+    // Consulta sin cursor
+    queryStats.queries.push({
+      operation: 'find.nocursor',
+      collection: 'cursores',
+      query: JSON.stringify(filter),
+      time: noCursorTime,
+      timestamp: new Date()
+    });
+    
+    // Consulta de agregación
+    queryStats.queries.push({
+      operation: 'aggregate',
+      collection: 'cursores',
+      query: JSON.stringify(filter),
+      time: aggregationTime,
+      timestamp: new Date()
+    });
+    
+    // Consulta con cursor nativo
+    queryStats.queries.push({
+      operation: 'nativecursor.find',
+      collection: 'cursores',
+      query: JSON.stringify(filter),
+      time: aggCursorTime,
+      timestamp: new Date()
+    });
+    
+    // Actualizar estadísticas totales
+    queryStats.totalQueries += 4;
+    
+    // Calcular diferencia de rendimiento en porcentaje
+    const diff = parseFloat(((noCursorTime - cursorTime) / noCursorTime * 100).toFixed(2));
+    const isOptimizado = cursorTime < noCursorTime;
+    
+    res.json({
+      success: true,
+      resultados: {
+        conCursor: {
+          tiempo: cursorTime,
+          documentos: processedResultsCursor.length,
+          metodo: "Utilizando cursor nativo optimizado con procesamiento por lotes",
+          batchSize: cursorBatchSize
+        },
+        sinCursor: {
+          tiempo: noCursorTime,
+          documentos: processedResultsNoCursor.length,
+          metodo: "Recuperación y procesamiento en un solo lote"
+        },
+        agregacion: {
+          tiempo: aggregationTime,
+          documentos: processedResultsAggregation.length,
+          metodo: "Utilizando pipeline de agregación"
+        },
+        cursorNativo: {
+          tiempo: aggCursorTime,
+          documentos: processedResultsAggCursor.length,
+          metodo: "Utilizando cursor de agregación",
+          batchSize: cursorBatchSize
+        }
+      },
+      comparacion: {
+        diferenciaPorcentaje: Math.abs(diff),
+        metodaMasRapido: isOptimizado ? "cursor" : "nocursor",
+        mensaje: isOptimizado 
+          ? `El cursor fue ${Math.abs(diff)}% más rápido que la consulta directa` 
+          : `La consulta directa fue ${Math.abs(diff)}% más rápida que el cursor`
+      },
+      filtroAplicado: filter,
+      parametros: {
+        limite: limit,
+        batchSize: cursorBatchSize
+      },
+      recomendaciones: [
+        "Utiliza `.lean()` para reducir el overhead de creación de objetos Mongoose",
+        "Configura un tamaño de lote (batchSize) adecuado para tu caso de uso",
+        "Utiliza proyección (select) para traer solo los campos necesarios",
+        "Aprovecha los índices estableciendo ordenación en campos indexados",
+        "Considera usar el cursor nativo para mayor rendimiento en conjuntos grandes"
+      ]
+    });
+    
+  } catch (error) {
+    console.error('Error al comparar consultas:', error);
+    res.status(500).json({ 
+      success: false, 
       error: error.message 
     });
   }
