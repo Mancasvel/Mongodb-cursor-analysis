@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "mongodb-analyzer": {
+      "url": "http://localhost:3000/sse",
+      "env": {
+        "API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}
