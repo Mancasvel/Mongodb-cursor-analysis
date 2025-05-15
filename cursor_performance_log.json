@@ -1,0 +1,59 @@
+{
+  "logs": [
+    {
+      "timestamp": "2025-05-15T18:12:42.308Z",
+      "tests": {
+        "nativeDriver": {
+          "times": [
+            63.39,
+            59.72,
+            59.65
+          ],
+          "average": 60.919999999999995
+        },
+        "mongooseLean": {
+          "times": [
+            51.2,
+            47.41,
+            46.89
+          ],
+          "average": 48.5
+        },
+        "mongoose": {
+          "times": [
+            53.1,
+            58.72,
+            46.07
+          ],
+          "average": 52.629999999999995
+        },
+        "forEach": {
+          "times": [
+            46.52,
+            47.04,
+            60.53
+          ],
+          "average": 51.36333333333334
+        }
+      },
+      "summary": {
+        "bestPerformer": "mongooseLean",
+        "bestPerformerAvg": 48.5,
+        "worstPerformer": "nativeDriver",
+        "worstPerformerAvg": 60.919999999999995,
+        "performanceGap": 25.61
+      }
+    }
+  ],
+  "summary": {
+    "totalRuns": 1,
+    "latestRun": "2025-05-15T18:12:42.308Z",
+    "averages": {
+      "nativeDriver": 60.92,
+      "mongooseLean": 48.5,
+      "mongoose": 52.63,
+      "forEach": 51.36
+    },
+    "mostEfficientMethod": "mongooseLean"
+  }
+}

@@ -158,7 +158,22 @@
             <h5 class="mb-0 fw-bold">Comparativa Visual</h5>
           </div>
           <div class="card-body">
-            <canvas id="comparacionChart" height="250"></canvas>
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tiempo-tab" data-bs-toggle="tab" data-bs-target="#tiempo" type="button" role="tab" aria-controls="tiempo" aria-selected="true">Tiempo de Ejecución</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="memoria-tab" data-bs-toggle="tab" data-bs-target="#memoria" type="button" role="tab" aria-controls="memoria" aria-selected="false">Uso de Memoria</button>
+              </li>
+            </ul>
+            <div class="tab-content pt-3" id="myTabContent">
+              <div class="tab-pane fade show active" id="tiempo" role="tabpanel" aria-labelledby="tiempo-tab">
+                <canvas id="comparacionChart" height="250"></canvas>
+              </div>
+              <div class="tab-pane fade" id="memoria" role="tabpanel" aria-labelledby="memoria-tab">
+                <canvas id="memoriaChart" height="250"></canvas>
+              </div>
+            </div>
           </div>
         </div>
         
@@ -180,6 +195,7 @@
                     <th>Método</th>
                     <th>Tiempo (ms)</th>
                     <th>Documentos</th>
+                    <th>Memoria (MB)</th>
                     <th>Rendimiento</th>
                   </tr>
                 </thead>
@@ -188,28 +204,40 @@
                     <td><span class="badge bg-primary">Con Cursor</span></td>
                     <td id="detail-cursor-tiempo">-</td>
                     <td id="detail-cursor-docs">-</td>
+                    <td id="detail-cursor-memoria">-</td>
                     <td id="detail-cursor-rendimiento">-</td>
                   </tr>
                   <tr>
                     <td><span class="badge bg-danger">Sin Cursor</span></td>
                     <td id="detail-nocursor-tiempo">-</td>
                     <td id="detail-nocursor-docs">-</td>
+                    <td id="detail-nocursor-memoria">-</td>
                     <td id="detail-nocursor-rendimiento">-</td>
                   </tr>
                   <tr>
                     <td><span class="badge bg-success">Agregación</span></td>
                     <td id="detail-agregacion-tiempo">-</td>
                     <td id="detail-agregacion-docs">-</td>
+                    <td id="detail-agregacion-memoria">-</td>
                     <td id="detail-agregacion-rendimiento">-</td>
                   </tr>
                   <tr>
                     <td><span class="badge bg-warning">Cursor Nativo</span></td>
                     <td id="detail-nativecursor-tiempo">-</td>
                     <td id="detail-nativecursor-docs">-</td>
+                    <td id="detail-nativecursor-memoria">-</td>
                     <td id="detail-nativecursor-rendimiento">-</td>
                   </tr>
                 </tbody>
               </table>
+            </div>
+            
+            <!-- Análisis de uso de memoria -->
+            <div class="mt-4">
+              <h6 class="fw-bold">Análisis de uso de memoria:</h6>
+              <div id="memoria-analisis" class="alert alert-light">
+                <p id="memoria-mensaje">-</p>
+              </div>
             </div>
           </div>
         </div>
@@ -307,8 +335,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const valorCiudadContainer = document.getElementById('valor-ciudad-container');
   const valorEdadContainer = document.getElementById('valor-edad-container');
   
-  // Gráfico para comparación
+  // Gráficos para comparación
   let comparacionChart = null;
+  let memoriaChart = null;
   
   // Cambiar campos de filtro según la selección
   radioCampo.forEach(radio => {
@@ -392,24 +421,66 @@ document.addEventListener('DOMContentLoaded', function() {
         // Actualizar detalles
         document.getElementById('detail-cursor-tiempo').textContent = data.resultados.conCursor.tiempo + ' ms';
         document.getElementById('detail-cursor-docs').textContent = data.resultados.conCursor.documentos;
+        document.getElementById('detail-cursor-memoria').textContent = data.resultados.conCursor.memoria?.heapUsedMB.toFixed(2) + ' MB' || '-';
         document.getElementById('detail-cursor-rendimiento').textContent = data.resultados.conCursor.metodo;
         
         document.getElementById('detail-nocursor-tiempo').textContent = data.resultados.sinCursor.tiempo + ' ms';
         document.getElementById('detail-nocursor-docs').textContent = data.resultados.sinCursor.documentos;
+        document.getElementById('detail-nocursor-memoria').textContent = data.resultados.sinCursor.memoria?.heapUsedMB.toFixed(2) + ' MB' || '-';
         document.getElementById('detail-nocursor-rendimiento').textContent = data.resultados.sinCursor.metodo;
         
         document.getElementById('detail-agregacion-tiempo').textContent = data.resultados.agregacion.tiempo + ' ms';
         document.getElementById('detail-agregacion-docs').textContent = data.resultados.agregacion.documentos;
+        document.getElementById('detail-agregacion-memoria').textContent = data.resultados.agregacion.memoria?.heapUsedMB.toFixed(2) + ' MB' || '-';
         document.getElementById('detail-agregacion-rendimiento').textContent = data.resultados.agregacion.metodo;
         
         document.getElementById('detail-nativecursor-tiempo').textContent = data.resultados.cursorNativo.tiempo + ' ms';
         document.getElementById('detail-nativecursor-docs').textContent = data.resultados.cursorNativo.documentos;
+        document.getElementById('detail-nativecursor-memoria').textContent = data.resultados.cursorNativo.memoria?.heapUsedMB.toFixed(2) + ' MB' || '-';
         document.getElementById('detail-nativecursor-rendimiento').textContent = data.resultados.cursorNativo.metodo;
         
         // Mostrar filtro aplicado
         const filtroAplicadoElem = document.getElementById('filtro-aplicado');
         const filtroStr = valor ? `${campo}: ${valor}` : 'Sin filtro (todos los documentos)';
         filtroAplicadoElem.textContent = filtroStr;
+        
+        // Mostrar análisis de memoria
+        if (data.comparacion.memoriaComparacion) {
+          const memoriaAnalisisElem = document.getElementById('memoria-mensaje');
+          memoriaAnalisisElem.innerHTML = `
+            <strong>Memoria:</strong> ${data.comparacion.memoriaComparacion}<br><br>
+            <strong>Análisis de consumo de memoria:</strong><br>
+            <ul class="mb-0">
+              <li><strong>Con Cursor (${data.resultados.conCursor.memoria?.heapUsedMB.toFixed(2)} MB):</strong> 
+                ${data.resultados.conCursor.documentos > 1000 ? 
+                  'Consumo moderado gracias al procesamiento por chunks que evita cargar todos los documentos a la vez.' : 
+                  'Para conjuntos pequeños, el procesamiento con cursor tiene una sobrecarga de memoria similar a otros métodos.'}
+              </li>
+              <li><strong>Sin Cursor (${data.resultados.sinCursor.memoria?.heapUsedMB.toFixed(2)} MB):</strong> 
+                ${data.resultados.sinCursor.documentos > 1000 ? 
+                  'Mayor consumo al cargar todos los documentos en memoria de una vez, pero con mejor rendimiento en tiempo.' : 
+                  'Para conjuntos pequeños, es eficiente tanto en memoria como en velocidad.'}
+              </li>
+              <li><strong>Agregación (${data.resultados.agregacion.memoria?.heapUsedMB.toFixed(2)} MB):</strong> 
+                ${data.resultados.agregacion.documentos > 1000 ? 
+                  'Consumo similar al método sin cursor, ya que carga todos los resultados a la vez.' : 
+                  'Equilibrio entre rendimiento y consumo de memoria para conjuntos pequeños.'}
+              </li>
+              <li><strong>Cursor Nativo (${data.resultados.cursorNativo.memoria?.heapUsedMB.toFixed(2)} MB):</strong> 
+                ${data.resultados.cursorNativo.documentos > 1000 ? 
+                  'Consumo moderado gracias al procesamiento por chunks, ideal para conjuntos grandes de datos con recursos limitados.' : 
+                  'Para conjuntos pequeños, el cursor nativo ofrece buen equilibrio entre memoria y rendimiento.'}
+              </li>
+            </ul>
+            <p class="mt-2 mb-0"><strong>Conclusión:</strong> 
+              ${data.resultados.conCursor.documentos > 5000 ? 
+                'Para conjuntos muy grandes de datos, elegir entre velocidad (sin cursor) o memoria (con cursor) según las limitaciones del sistema.' : 
+                data.resultados.conCursor.documentos > 1000 ? 
+                  'Para conjuntos medianos, el uso de cursores nativos ofrece buen equilibrio entre rendimiento y consumo de memoria.' : 
+                  'Para conjuntos pequeños, la diferencia de memoria es mínima, por lo que se recomienda el método más rápido.'}
+            </p>
+          `;
+        }
         
         // Actualizar/Crear gráfico
         const ctx = document.getElementById('comparacionChart').getContext('2d');
@@ -469,6 +540,65 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           }
         });
+        
+        // Crear gráfico de uso de memoria
+        if (data.resultados.conCursor.memoria && data.resultados.sinCursor.memoria) {
+          // Destruir gráfico anterior si existe
+          if (memoriaChart) {
+            memoriaChart.destroy();
+          }
+          
+          const ctxMemoria = document.getElementById('memoriaChart').getContext('2d');
+          memoriaChart = new Chart(ctxMemoria, {
+            type: 'bar',
+            data: {
+              labels: ['Con Cursor', 'Sin Cursor', 'Agregación', 'Cursor Nativo'],
+              datasets: [{
+                label: 'Uso de Memoria (MB)',
+                data: [
+                  data.resultados.conCursor.memoria?.heapUsedMB || 0,
+                  data.resultados.sinCursor.memoria?.heapUsedMB || 0,
+                  data.resultados.agregacion.memoria?.heapUsedMB || 0,
+                  data.resultados.cursorNativo.memoria?.heapUsedMB || 0
+                ],
+                backgroundColor: [
+                  'rgba(79, 70, 229, 0.5)',
+                  'rgba(220, 38, 38, 0.5)',
+                  'rgba(16, 185, 129, 0.5)',
+                  'rgba(245, 158, 11, 0.5)'
+                ],
+                borderColor: [
+                  'rgb(79, 70, 229)',
+                  'rgb(220, 38, 38)',
+                  'rgb(16, 185, 129)',
+                  'rgb(245, 158, 11)'
+                ],
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: {
+                  position: 'top',
+                },
+                title: {
+                  display: true,
+                  text: 'Comparativa de Uso de Memoria'
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  title: {
+                    display: true,
+                    text: 'Memoria (MB)'
+                  }
+                }
+              }
+            }
+          });
+        }
       } else {
         alert('Error: ' + data.error);
       }

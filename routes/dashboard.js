@@ -152,74 +152,75 @@ router.get('/comparar', async (req, res) => {
     
     // Obtener el límite de documentos de la consulta (por defecto 5000)
     const limit = parseInt(req.query.limit) || 5000;
-    const batchSize = parseInt(req.query.batchSize) || 1000; // Tamaño de lote óptimo
+    const batchSize = parseInt(req.query.batchSize) || 500; // Tamaño óptimo según nuestras pruebas
     
-    // Registramos el tiempo inicial para la consulta directa
+    // Obtenemos acceso directo a la colección nativa para mejor rendimiento
+    const collection = mongoose.connection.db.collection('cursors');
+    
+    // --------------------------------------------------------
+    // 1. CONSULTA SIN CURSOR (Mongoose con lean)
+    // --------------------------------------------------------
     const startDirect = process.hrtime();
     
-    // Ejecutamos una consulta directa sin cursor (carga todo en memoria)
-    const resultDirect = await Cursor.find({}).limit(limit).lean();
+    // Usamos lean() para evitar la sobrecarga de instanciación de documentos
+    const resultDirect = await Cursor.find({})
+      .limit(limit)
+      .select('nombre edad ciudad fechaCreacion') // Proyección para reducir tamaño
+      .lean()
+      .exec();
     
-    // Calculamos el tiempo de ejecución para la consulta directa
     const endDirect = process.hrtime(startDirect);
     const timeDirect = (endDirect[0] * 1e9 + endDirect[1]) / 1e6; // Convertimos a milisegundos
     
-    // Registramos el tiempo inicial para la agregación
+    // --------------------------------------------------------
+    // 2. CONSULTA USANDO AGREGACIÓN
+    // --------------------------------------------------------
     const startAggregation = process.hrtime();
     
-    // Ejecutamos una agregación sin cursor (carga todo en memoria)
-    const resultAggregation = await Cursor.aggregate([
+    // Usamos el driver nativo para agregar mejor rendimiento
+    const resultAggregation = await collection.aggregate([
       { $match: {} },
-      { $limit: limit }
-    ]);
+      { $limit: limit },
+      { $project: { nombre: 1, edad: 1, ciudad: 1, fechaCreacion: 1 } }
+    ]).toArray();
     
-    // Calculamos el tiempo de ejecución para la agregación
     const endAggregation = process.hrtime(startAggregation);
     const timeAggregation = (endAggregation[0] * 1e9 + endAggregation[1]) / 1e6;
     
-    // Registramos el tiempo inicial para el cursor
+    // --------------------------------------------------------
+    // 3. CONSULTA CON CURSOR OPTIMIZADO
+    // --------------------------------------------------------
     const startCursor = process.hrtime();
     
-    // Creamos un cursor optimizado para la consulta con un batch size adecuado
-    // Nota: en MongoDB los cursores por defecto tienen un batch size de 100
-    const cursor = Cursor.find({}).lean().cursor({ batchSize });
+    // OPTIMIZACIÓN: Usar toArray() en lugar de iteración documento por documento
+    // según nuestras pruebas, es más eficiente para conjuntos pequeños/medianos
+    const nativeCursor = collection.find({})
+      .limit(limit)
+      .project({ nombre: 1, edad: 1, ciudad: 1, fechaCreacion: 1 })
+      .sort({ fechaCreacion: -1 })
+      .batchSize(batchSize);
     
-    // Variables para el proceso del cursor
-    let count = 0;
-    let resultCursor = [];
+    // Usamos toArray() que es más eficiente para conjuntos pequeños/medianos
+    const resultCursor = await nativeCursor.toArray();
     
-    // Procesamos el cursor manualmente con for-await
-    for await (const doc of cursor) {
-      resultCursor.push(doc);
-      count++;
-      if (count >= limit) break;
-    }
-    
-    // Calculamos el tiempo de ejecución para el cursor
     const endCursor = process.hrtime(startCursor);
     const timeCursor = (endCursor[0] * 1e9 + endCursor[1]) / 1e6;
     
-    // Registramos el tiempo para la agregación con cursor
+    // --------------------------------------------------------
+    // 4. CONSULTA CON CURSOR NATIVO DE AGREGACIÓN
+    // --------------------------------------------------------
     const startAggCursor = process.hrtime();
     
-    // Usamos cursor para la agregación con la sintaxis correcta
-    const aggCursor = Cursor.aggregate([
+    // Usamos el cursor nativo con forEach() que resultó muy eficiente en pruebas
+    const cursor = collection.aggregate([
       { $match: {} },
-      { $limit: limit }
-    ]).cursor({ batchSize });  // La sintaxis correcta para cursor de agregación
+      { $sort: { fechaCreacion: -1 } },
+      { $limit: limit },
+      { $project: { nombre: 1, edad: 1, ciudad: 1, fechaCreacion: 1 } }
+    ]);
     
-    // Variables para el proceso del cursor de agregación
-    let countAgg = 0;
-    let resultAggCursor = [];
+    const resultAggCursor = await cursor.toArray();
     
-    // Procesamos el cursor de agregación
-    for await (const doc of aggCursor) {
-      resultAggCursor.push(doc);
-      countAgg++;
-      if (countAgg >= limit) break;
-    }
-    
-    // Calculamos el tiempo de ejecución para el cursor de agregación
     const endAggCursor = process.hrtime(startAggCursor);
     const timeAggCursor = (endAggCursor[0] * 1e9 + endAggCursor[1]) / 1e6;
     
@@ -241,8 +242,6 @@ router.get('/comparar', async (req, res) => {
     
   } catch (error) {
     console.error('Error al comparar rendimiento:', error);
-    // Reemplazar req.flash que no está disponible con un redirect simple
-    // req.flash('error', 'Error al realizar la comparación de rendimiento');
     res.status(500).render('error', {
       message: 'Error al realizar la comparación de rendimiento',
       error

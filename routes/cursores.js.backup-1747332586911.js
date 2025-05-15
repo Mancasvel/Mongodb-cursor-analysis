@@ -163,7 +163,7 @@ router.get('/:id/explain', async (req, res) => {
     const cursorId = req.params.id;
     
     // Verificar que el cursor exista
-    const cursorExiste = await Cursor.findById(cursorId).lean(); // Usar lean() para mejor rendimiento
+    const cursorExiste = await Cursor.findById(cursorId);
     if (!cursorExiste) {
       return res.status(404).json({ 
         success: false,
@@ -435,9 +435,7 @@ router.post('/comparar', async (req, res) => {
     
     // Validar parámetros
     const limit = parseInt(limite) || 10;
-    // Enforce minimum batch size of 100, default to 500 regardless of what's passed
-    const cursorBatchSize = Math.max(parseInt(batchSize) || 500, 100); // Optimizado a 500 basado en pruebas de rendimiento
-    
+    const cursorBatchSize = parseInt(batchSize) || 100; // Aumentar el tamaño de lote predeterminado
     let filter = {};
     
     // Construir filtro a partir de los parámetros
@@ -445,272 +443,122 @@ router.post('/comparar', async (req, res) => {
       filter[filtro.campo] = filtro.valor;
     }
     
-    // Función para medir uso de memoria
-    const getMemoryUsage = () => {
-      const memoryUsage = process.memoryUsage();
-      return {
-        rss: memoryUsage.rss / (1024 * 1024), // Resident Set Size en MB
-        heapTotal: memoryUsage.heapTotal / (1024 * 1024), // Total heap size en MB
-        heapUsed: memoryUsage.heapUsed / (1024 * 1024), // Used heap size en MB
-        external: memoryUsage.external / (1024 * 1024) // External memory en MB
-      };
-    };
-    
-    // Función para calcular la diferencia de memoria entre dos puntos
-    const calculateMemoryDifference = (before, after) => {
-      return {
-        rss: parseFloat((after.rss - before.rss).toFixed(2)),
-        heapTotal: parseFloat((after.heapTotal - before.heapTotal).toFixed(2)), 
-        heapUsed: parseFloat((after.heapUsed - before.heapUsed).toFixed(2)),
-        external: parseFloat((after.external - before.external).toFixed(2))
-      };
-    };
-    
     // Simular procesamiento intensivo para cada documento
     // Esta función hace más evidente las diferencias de rendimiento entre métodos
     const procesarDocumento = (doc) => {
       // Simulación de procesamiento intensivo por documento
       let result = { ...doc };
       
-      // Ajustar la intensidad de procesamiento basado en el tamaño del conjunto de datos
-      // Para conjuntos grandes, reducimos la intensidad de procesamiento para hacer los tests más realistas
-      const processingIntensity = limit > 1000 ? 50 : 200;
-      
-      // Ajustar la intensidad de procesamiento para ser más realista
-      // Un procesamiento más ligero permite mostrar mejor las diferencias entre métodos
-      for (let i = 0; i < processingIntensity; i++) {
+      // Realizar algunas operaciones costosas
+      for (let i = 0; i < 1000; i++) {
         result._simulatedField = Math.sqrt(i) * Math.random();
       }
       
       return result;
     };
     
-    // Acceder directamente a la colección nativa para mejor rendimiento
-    const collection = mongoose.connection.db.collection('cursors');
-    
-    // --------------------------------------------------------
-    // Consulta 1: Usando cursor nativo con toArray (óptimo para datasets medianos)
-    // --------------------------------------------------------
-    // Medimos memoria antes
-    const memoryBeforeCursor = getMemoryUsage();
+    // Consulta 1: Usando cursor optimizado correctamente
     const startCursor = performance.now();
     
-    // Verificar si estamos trabajando con un dataset grande
-    const isLargeDataset = limit > 1000;
+    // Crear un cursor nativo optimizado
+    const collection = mongoose.connection.db.collection('cursors');
+    const nativeCursor = collection.find(filter, {
+      projection: { nombre: 1, edad: 1, ciudad: 1, fechaCreacion: 1 }
+    }).limit(limit).sort({ fechaCreacion: -1 }).batchSize(cursorBatchSize);
     
-    let processedResultsCursor = [];
+    // OPTIMIZACIÓN: Cargar los documentos usando batchSize pero procesarlos en bloque
+    const documents = await nativeCursor.toArray();
     
-    if (isLargeDataset) {
-      // Para datasets grandes, usamos procesamiento por chunks para reducir el uso de memoria
-      const CHUNK_SIZE = 1000; // Procesar en chunks de 1000 documentos
-      const totalChunks = Math.ceil(limit / CHUNK_SIZE);
-      
-      // Preparar el procesamiento para cada chunk
-      for (let i = 0; i < totalChunks; i++) {
-        const skipCount = i * CHUNK_SIZE;
-        const limitCount = Math.min(CHUNK_SIZE, limit - skipCount);
-        
-        // Consultar solo un chunk a la vez
-        const chunkCursor = collection.find(filter)
-          .project({ nombre: 1, edad: 1, ciudad: 1, fechaCreacion: 1 })
-          .sort({ fechaCreacion: -1 })
-          .skip(skipCount)
-          .limit(limitCount)
-          .batchSize(Math.min(cursorBatchSize, CHUNK_SIZE));
-        
-        // Procesar el chunk y liberar memoria
-        const chunkDocs = await chunkCursor.toArray();
-        processedResultsCursor.push(...chunkDocs.map(procesarDocumento));
-        
-        // Cerrar el cursor explícitamente
-        await chunkCursor.close();
-        
-        // Si ya alcanzamos el límite, salir
-        if (processedResultsCursor.length >= limit) break;
-      }
-    } else {
-      // Para datasets pequeños, usar toArray directamente es más eficiente
-      const nativeCursor = collection.find(filter)
-        .project({ nombre: 1, edad: 1, ciudad: 1, fechaCreacion: 1 })
-        .sort({ fechaCreacion: -1 })
-        .limit(limit)
-        .batchSize(cursorBatchSize);
-      
-      // OPTIMIZACIÓN: Usar toArray() para obtener todos los documentos de una vez
-      const documents = await nativeCursor.toArray();
-      
-      // Usar map para procesamiento en bloque (más eficiente)
-      processedResultsCursor = documents.map(procesarDocumento);
-    }
+    // Usar map para procesamiento en bloque (mucho más eficiente para la CPU)
+    const processedResultsCursor = documents.map(procesarDocumento);
     
     const endCursor = performance.now();
-    const memoryAfterCursor = getMemoryUsage();
-    const memoryCursor = calculateMemoryDifference(memoryBeforeCursor, memoryAfterCursor);
     const cursorTime = parseFloat((endCursor - startCursor).toFixed(2));
     
-    // --------------------------------------------------------
-    // Consulta 2: Usando Mongoose con lean() (para comparación)
-    // --------------------------------------------------------
-    const memoryBeforeNoCursor = getMemoryUsage();
+    // Consulta 2: Sin usar optimizaciones de cursor
     const startNoCursor = performance.now();
+    const resultsNoCursor = await Cursor.find(filter).limit(limit).exec();
     
-    // Usar lean() para evitar la sobrecarga de instanciación de documentos
-    const resultsNoCursor = await Cursor.find(filter)
-      .limit(limit)
-      .select('nombre edad ciudad fechaCreacion')
-      .lean()
-      .exec();
-    
-    // Procesar todos los documentos de una vez
+    // Procesar todos los documentos de una vez (simulando la carga en memoria)
     const processedResultsNoCursor = resultsNoCursor.map(procesarDocumento);
     
     const endNoCursor = performance.now();
-    const memoryAfterNoCursor = getMemoryUsage();
-    const memoryNoCursor = calculateMemoryDifference(memoryBeforeNoCursor, memoryAfterNoCursor);
     const noCursorTime = parseFloat((endNoCursor - startNoCursor).toFixed(2));
     
-    // --------------------------------------------------------
-    // Consulta 3: Usando agregación nativa para comparación
-    // --------------------------------------------------------
-    const memoryBeforeAggregation = getMemoryUsage();
+    // Consulta 3: Usando agregación para comparación adicional
     const startAggregation = performance.now();
-    
-    const resultsAggregation = await collection.aggregate([
+    const resultsAggregation = await Cursor.aggregate([
       { $match: filter },
-      { $sort: { fechaCreacion: -1 } },
       { $limit: limit },
-      { $project: { nombre: 1, edad: 1, ciudad: 1, fechaCreacion: 1 } }
-    ]).toArray();
+      { $sort: { fechaCreacion: -1 } }
+    ]);
     
     // Procesar resultados de agregación
     const processedResultsAggregation = resultsAggregation.map(procesarDocumento);
     
     const endAggregation = performance.now();
-    const memoryAfterAggregation = getMemoryUsage();
-    const memoryAggregation = calculateMemoryDifference(memoryBeforeAggregation, memoryAfterAggregation);
     const aggregationTime = parseFloat((endAggregation - startAggregation).toFixed(2));
     
-    // --------------------------------------------------------
-    // Consulta 4: Usando cursor nativo con optimizaciones específicas
-    // --------------------------------------------------------
-    const memoryBeforeNativeCursor = getMemoryUsage();
-    const startNativeCursor = performance.now();
+    // Consulta 4: Usando agregación con cursor
+    const startAggCursor = performance.now();
     
-    let processedResultsForEach = [];
+    // Crear un cursor de agregación
+    const aggCursor = Cursor.aggregate([
+      { $match: filter },
+      { $limit: limit },
+      { $sort: { fechaCreacion: -1 } }
+    ]).cursor();
     
-    if (isLargeDataset) {
-      // Para datasets grandes, evitamos el procesamiento puntual y usamos un enfoque similar al anterior
-      const CHUNK_SIZE = 1000;
-      const totalChunks = Math.ceil(limit / CHUNK_SIZE);
-      
-      for (let i = 0; i < totalChunks; i++) {
-        const skipCount = i * CHUNK_SIZE;
-        const limitCount = Math.min(CHUNK_SIZE, limit - skipCount);
-        
-        const chunkAggCursor = collection.aggregate([
-          { $match: filter },
-          { $sort: { fechaCreacion: -1 } },
-          { $skip: skipCount },
-          { $limit: limitCount },
-          { $project: { nombre: 1, edad: 1, ciudad: 1, fechaCreacion: 1 } }
-        ]);
-        
-        // Procesar el chunk completo de una vez
-        const chunkDocs = await chunkAggCursor.toArray();
-        processedResultsForEach.push(...chunkDocs.map(procesarDocumento));
-        
-        // Cerrar el cursor explícitamente
-        await chunkAggCursor.close();
-        
-        // Si ya alcanzamos el límite, salir
-        if (processedResultsForEach.length >= limit) break;
-      }
-    } else {
-      // Para datasets pequeños, forEach es eficiente
-      const forEachCursor = collection.find(filter)
-        .project({ nombre: 1, edad: 1, ciudad: 1, fechaCreacion: 1 })
-        .sort({ fechaCreacion: -1 })
-        .limit(limit)
-        .batchSize(cursorBatchSize);
-      
-      // Usar forEach que tiene buen rendimiento en conjuntos pequeños/medianos
-      await forEachCursor.forEach(doc => {
-        processedResultsForEach.push(procesarDocumento(doc));
-      });
-    }
+    // OPTIMIZACIÓN: Cargar y procesar en bloque en lugar de usar iteración documento por documento
+    const aggDocuments = await aggCursor.toArray();
+    const processedResultsAggCursor = aggDocuments.map(procesarDocumento);
     
-    const endNativeCursor = performance.now();
-    const memoryAfterNativeCursor = getMemoryUsage();
-    const memoryNativeCursor = calculateMemoryDifference(memoryBeforeNativeCursor, memoryAfterNativeCursor);
-    const nativeCursorTime = parseFloat((endNativeCursor - startNativeCursor).toFixed(2));
+    const endAggCursor = performance.now();
+    const aggCursorTime = parseFloat((endAggCursor - startAggCursor).toFixed(2));
     
     // Registrar las consultas en las estadísticas para análisis histórico
-    queryStats.queries.push(
-      {
-        operation: 'cursor.find',
-        collection: 'cursores',
-        query: JSON.stringify(filter),
-        time: cursorTime,
-        timestamp: new Date()
-      },
-      {
-        operation: 'find.nocursor',
-        collection: 'cursores',
-        query: JSON.stringify(filter),
-        time: noCursorTime,
-        timestamp: new Date()
-      },
-      {
-        operation: 'aggregate',
-        collection: 'cursores',
-        query: JSON.stringify(filter),
-        time: aggregationTime,
-        timestamp: new Date()
-      },
-      {
-        operation: 'nativecursor.forEach',
-        collection: 'cursores',
-        query: JSON.stringify(filter),
-        time: nativeCursorTime,
-        timestamp: new Date()
-      }
-    );
+    // Consulta con cursor
+    queryStats.queries.push({
+      operation: 'cursor.find',
+      collection: 'cursores',
+      query: JSON.stringify(filter),
+      time: cursorTime,
+      timestamp: new Date()
+    });
+    
+    // Consulta sin cursor
+    queryStats.queries.push({
+      operation: 'find.nocursor',
+      collection: 'cursores',
+      query: JSON.stringify(filter),
+      time: noCursorTime,
+      timestamp: new Date()
+    });
+    
+    // Consulta de agregación
+    queryStats.queries.push({
+      operation: 'aggregate',
+      collection: 'cursores',
+      query: JSON.stringify(filter),
+      time: aggregationTime,
+      timestamp: new Date()
+    });
+    
+    // Consulta con cursor nativo
+    queryStats.queries.push({
+      operation: 'nativecursor.find',
+      collection: 'cursores',
+      query: JSON.stringify(filter),
+      time: aggCursorTime,
+      timestamp: new Date()
+    });
     
     // Actualizar estadísticas totales
     queryStats.totalQueries += 4;
     
-    // Encontrar el método más rápido
-    const methods = [
-      { name: 'cursor', time: cursorTime },
-      { name: 'nocursor', time: noCursorTime },
-      { name: 'agregacion', time: aggregationTime },
-      { name: 'nativecursor', time: nativeCursorTime }
-    ];
-    methods.sort((a, b) => a.time - b.time);
-    
-    const fastestMethod = methods[0];
-    const cursorMethod = methods.find(m => m.name === 'cursor');
-    const bestCursorMethod = ['cursor', 'nativecursor'].includes(fastestMethod.name) ? 
-      fastestMethod : 
-      methods.find(m => m.name === 'cursor').time < methods.find(m => m.name === 'nativecursor').time ? 
-        methods.find(m => m.name === 'cursor') : 
-        methods.find(m => m.name === 'nativecursor');
-    
-    // Calcular diferencia de rendimiento respecto al más rápido
-    // Para conjuntos grandes, comparamos contra el best cursor method
-    const diff = isLargeDataset ?
-      parseFloat(((Math.min(cursorTime, nativeCursorTime) - fastestMethod.time) / fastestMethod.time * 100).toFixed(2)) :
-      parseFloat(((cursorMethod.time - fastestMethod.time) / fastestMethod.time * 100).toFixed(2));
-    
-    // Encontrar el método con menor uso de memoria (heapUsed)
-    const memoryMethods = [
-      { name: 'cursor', memory: memoryCursor.heapUsed },
-      { name: 'nocursor', memory: memoryNoCursor.heapUsed },
-      { name: 'agregacion', memory: memoryAggregation.heapUsed },
-      { name: 'nativecursor', memory: memoryNativeCursor.heapUsed }
-    ];
-    memoryMethods.sort((a, b) => a.memory - b.memory);
-    const mostEfficientMemory = memoryMethods[0];
+    // Calcular diferencia de rendimiento en porcentaje
+    const diff = parseFloat(((noCursorTime - cursorTime) / noCursorTime * 100).toFixed(2));
+    const isOptimizado = cursorTime < noCursorTime;
     
     res.json({
       success: true,
@@ -718,73 +566,49 @@ router.post('/comparar', async (req, res) => {
         conCursor: {
           tiempo: cursorTime,
           documentos: processedResultsCursor.length,
-          metodo: isLargeDataset ? 
-            "Utilizando cursor nativo optimizado con procesamiento por chunks" : 
-            "Utilizando cursor nativo optimizado con toArray",
-          batchSize: cursorBatchSize,
-          memoria: {
-            heapUsedMB: memoryCursor.heapUsed,
-            rssMB: memoryCursor.rss
-          }
+          metodo: "Utilizando cursor nativo optimizado con procesamiento por lotes",
+          batchSize: cursorBatchSize
         },
         sinCursor: {
           tiempo: noCursorTime,
           documentos: processedResultsNoCursor.length,
-          metodo: "Mongoose con lean() para procesamiento eficiente",
-          memoria: {
-            heapUsedMB: memoryNoCursor.heapUsed,
-            rssMB: memoryNoCursor.rss
-          }
+          metodo: "Recuperación y procesamiento en un solo lote"
         },
         agregacion: {
           tiempo: aggregationTime,
           documentos: processedResultsAggregation.length,
-          metodo: "Utilizando pipeline de agregación nativo",
-          memoria: {
-            heapUsedMB: memoryAggregation.heapUsed,
-            rssMB: memoryAggregation.rss
-          }
+          metodo: "Utilizando pipeline de agregación"
         },
         cursorNativo: {
-          tiempo: nativeCursorTime,
-          documentos: processedResultsForEach.length,
-          metodo: isLargeDataset ? 
-            "Utilizando cursor nativo con procesamiento por chunks" : 
-            "Utilizando cursor nativo con forEach",
-          batchSize: cursorBatchSize,
-          memoria: {
-            heapUsedMB: memoryNativeCursor.heapUsed,
-            rssMB: memoryNativeCursor.rss
-          }
+          tiempo: aggCursorTime,
+          documentos: processedResultsAggCursor.length,
+          metodo: "Utilizando cursor de agregación",
+          batchSize: cursorBatchSize
         }
       },
       comparacion: {
         diferenciaPorcentaje: Math.abs(diff),
-        metodaMasRapido: fastestMethod.name,
-        metodoMemoriaEficiente: mostEfficientMemory.name,
-        mensaje: `El método ${fastestMethod.name} fue el más rápido. ` + 
-                `El cursor optimizado (${cursorMethod.time.toFixed(2)}ms) es ` + 
-                `${diff > 0 ? diff.toFixed(2) + '% más lento' : Math.abs(diff).toFixed(2) + '% más rápido'} ` +
-                `que el método más rápido (${fastestMethod.time.toFixed(2)}ms).`,
-        memoriaComparacion: `El método ${mostEfficientMemory.name} utilizó menos memoria (${mostEfficientMemory.memory.toFixed(2)} MB).`
+        metodaMasRapido: isOptimizado ? "cursor" : "nocursor",
+        mensaje: isOptimizado 
+          ? `El cursor fue ${Math.abs(diff)}% más rápido que la consulta directa` 
+          : `La consulta directa fue ${Math.abs(diff)}% más rápida que el cursor`
       },
       filtroAplicado: filter,
       parametros: {
         limite: limit,
-        batchSize: cursorBatchSize,
-        batchSizeOriginal: parseInt(batchSize) || 'no especificado',
-        notaImportante: cursorBatchSize !== parseInt(batchSize) ? 
-          'Se aplicó un batch size mínimo de 100 para optimizar rendimiento' : '',
-        tipoDataset: isLargeDataset ? 'grande' : 'pequeño',
-        optimizacionAplicada: isLargeDataset ? 
-          'Se usó procesamiento por chunks para conjuntos grandes de datos' : 
-          'Se usó carga completa y procesamiento en bloque para conjuntos pequeños'
+        batchSize: cursorBatchSize
       },
-      memoriaProceso: {
-        inicial: memoryBeforeCursor,
-        actual: memoryAfterNativeCursor
-      }
+      recomendaciones: [
+        "Utiliza `.lean()` para reducir el overhead de creación de objetos Mongoose",
+        "Configura un tamaño de lote (batchSize) adecuado para tu caso de uso",
+        "Utiliza proyección (select) para traer solo los campos necesarios",
+        "Aprovecha los índices estableciendo ordenación en campos indexados",
+        "Considera usar el cursor nativo para mayor rendimiento en conjuntos grandes",
+        "Para conjuntos pequeños o medianos (<100K docs), procesa en bloque con .toArray() y .map()",
+        "Para conjuntos realmente grandes (>1M docs), usa procesamiento por lotes con cursores y límites de memoria"
+      ]
     });
+    
   } catch (error) {
     console.error('Error al comparar consultas:', error);
     res.status(500).json({ 
