@@ -83,7 +83,7 @@ class WebSocketService {
         throw new Error('Cliente no encontrado');
       }
       
-      const { query, imageUrl } = data;
+      const { query, imageUrl, modelOverride } = data;
       const { sessionId } = client;
       
       // Notificar que se está procesando la consulta
@@ -102,6 +102,12 @@ class WebSocketService {
         });
       }
       
+      // Si se especificó un modelo, usarlo
+      if (modelOverride) {
+        options.modelOverride = modelOverride;
+        console.log(`Cliente WebSocket solicitó usar modelo: ${modelOverride}`);
+      }
+      
       // Procesar la consulta con el servicio NLP
       const parsedQuery = await nlpService.processInstruction(query, sessionId, options);
       
@@ -117,7 +123,8 @@ class WebSocketService {
         metadata: {
           resultCount: Array.isArray(result) ? result.length : 1,
           query: parsedQuery.mongoQuery,
-          usedImage: !!imageUrl
+          usedImage: !!imageUrl,
+          usedModel: modelOverride || 'default'
         }
       });
     } catch (error) {

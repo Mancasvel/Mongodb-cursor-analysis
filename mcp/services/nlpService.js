@@ -86,7 +86,7 @@ class NLPService {
     try {
       // Hacer la llamada a la API de OpenRouter
       const response = await this.openai.chat.completions.create({
-        model: config.openRouter.model,
+        model: options.modelOverride || config.openRouter.model,
         messages: [systemPrompt, ...context.history],
         temperature: 0.2,
         max_tokens: 500

@@ -8,7 +8,7 @@ const dbService = require('../services/dbService');
 router.post('/query', async (req, res) => {
   try {
     // Validar la solicitud
-    const { query, sessionId, imageUrl } = req.body;
+    const { query, sessionId, imageUrl, modelOverride } = req.body;
     
     if (!query) {
       return res.status(400).json({ 
@@ -24,6 +24,11 @@ router.post('/query', async (req, res) => {
     const options = {};
     if (imageUrl) {
       options.imageUrl = imageUrl;
+    }
+    
+    // Si se especificó un modelo, usarlo
+    if (modelOverride) {
+      options.modelOverride = modelOverride;
     }
     
     // Procesar la consulta con el servicio NLP
@@ -43,7 +48,8 @@ router.post('/query', async (req, res) => {
       metadata: {
         resultCount: Array.isArray(result) ? result.length : 1,
         query: parsedQuery.mongoQuery,
-        usedImage: !!imageUrl
+        usedImage: !!imageUrl,
+        usedModel: options.modelOverride || 'default'
       }
     });
   } catch (error) {

@@ -297,4 +297,210 @@ body {
   .table th, .table td {
     padding: 0.75rem;
   }
+}
+
+/* Chat MCP flotante */
+.mcp-chat-container {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  z-index: 9999;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+.mcp-chat-button {
+  display: flex;
+  align-items: center;
+  background-color: #3772ff;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(55, 114, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.mcp-chat-button:hover {
+  background-color: #2a5cd5;
+  box-shadow: 0 6px 16px rgba(55, 114, 255, 0.4);
+}
+
+.mcp-chat-button svg {
+  margin-right: 8px;
+}
+
+.mcp-chat-panel {
+  display: none;
+  flex-direction: column;
+  width: 350px;
+  height: 500px;
+  background-color: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+  margin-bottom: 15px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.mcp-chat-panel.active {
+  display: flex;
+}
+
+.mcp-chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #3772ff;
+  color: white;
+}
+
+.mcp-chat-header h5 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.mcp-chat-close {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+.mcp-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px;
+}
+
+.mcp-message {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-radius: 18px;
+  max-width: 85%;
+  word-wrap: break-word;
+}
+
+.mcp-message.user {
+  background-color: #3772ff;
+  color: white;
+  margin-left: auto;
+  border-bottom-right-radius: 4px;
+}
+
+.mcp-message.response {
+  background-color: #f1f3f5;
+  color: #212529;
+  margin-right: auto;
+  border-bottom-left-radius: 4px;
+}
+
+.mcp-message.system {
+  background-color: #ffeeba;
+  color: #856404;
+  text-align: center;
+  width: 100%;
+  max-width: 100%;
+  padding: 8px;
+  font-size: 14px;
+  border-radius: 6px;
+}
+
+.mcp-chat-input {
+  display: flex;
+  border-top: 1px solid #e9ecef;
+  padding: 12px 15px;
+}
+
+.mcp-chat-input input {
+  flex: 1;
+  border: 1px solid #ced4da;
+  border-radius: 20px;
+  padding: 8px 15px;
+  font-size: 14px;
+  outline: none;
+}
+
+.mcp-chat-input input:focus {
+  border-color: #3772ff;
+  box-shadow: 0 0 0 3px rgba(55, 114, 255, 0.25);
+}
+
+.mcp-chat-input button {
+  background-color: #3772ff;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  margin-left: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mcp-chat-input button svg {
+  fill: white;
+}
+
+.mcp-message pre {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  padding: 8px;
+  overflow-x: auto;
+  font-size: 13px;
+}
+
+.mcp-message.response pre {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.mcp-typing {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-radius: 18px;
+  max-width: 85%;
+  background-color: #f1f3f5;
+  color: #6c757d;
+  margin-right: auto;
+  border-bottom-left-radius: 4px;
+}
+
+.mcp-typing .dots {
+  display: flex;
+}
+
+.mcp-typing .dot {
+  width: 8px;
+  height: 8px;
+  background-color: #adb5bd;
+  border-radius: 50%;
+  margin-right: 4px;
+  animation: typing-dot 1.4s infinite ease-in-out both;
+}
+
+.mcp-typing .dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.mcp-typing .dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes typing-dot {
+  0%, 80%, 100% { 
+    transform: scale(0);
+  }
+  40% { 
+    transform: scale(1);
+  }
 } 
