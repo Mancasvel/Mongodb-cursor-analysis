@@ -69,13 +69,42 @@ class NLPService {
       - createdAt (Date)
       - updatedAt (Date)
       Utiliza siempre estos nombres de campo exactamente como aparecen cuando generes la consulta MongoDB.
+      
       Analiza la consulta del usuario y devuelve un JSON con el siguiente formato:
       {
-        "type": "query|update|insert|delete|aggregate",
-        "operation": "find|findOne|updateOne|updateMany|insertOne|insertMany|deleteOne|deleteMany|aggregate",
+        "type": "query|update|insert|delete|aggregate|explain",
+        "operation": "find|findOne|updateOne|updateMany|insertOne|insertMany|deleteOne|deleteMany|aggregate|explain",
         "collection": "nombre de la colección (por defecto: cursors)",
         "params": { parámetros específicos según el tipo de operación },
         "mongoQuery": { la consulta MongoDB correspondiente }
+      }
+      
+      Para operaciones de tipo "explain", incluye estos campos adicionales cuando sea apropiado:
+      {
+        "explainOperation": "find|aggregate|count", // La operación que se quiere explicar
+        "explainVerbosity": "queryPlanner|executionStats|allPlansExecution", // Nivel de detalle (por defecto queryPlanner)
+        "mongoQuery": { la consulta MongoDB a explicar }
+      }
+      
+      Ejemplos de solicitudes de explain y sus respuestas:
+      
+      1. "Explica cómo se ejecutaría la consulta para encontrar cursores de Madrid"
+      {
+        "type": "explain",
+        "operation": "explain",
+        "collection": "cursors",
+        "explainOperation": "find",
+        "explainVerbosity": "queryPlanner",
+        "mongoQuery": { "ciudad": "Madrid" }
+      }
+      
+      2. "Dame el plan de ejecución para contar todos los cursores mayores de 30 años"
+      {
+        "type": "explain",
+        "operation": "explain",
+        "collection": "cursors",
+        "explainOperation": "count",
+        "mongoQuery": { "edad": { "$gt": 30 } }
       }
       
       Devuelve solamente el JSON sin ningún formato adicional, prefijos o sufijos. No utilices bloques de código markdown como \`\`\`json o \`\`\`. Solo devuelve el JSON plano.
@@ -150,6 +179,8 @@ class NLPService {
             parsedResponse.type = 'delete';
           } else if (parsedResponse.operation === 'aggregate') {
             parsedResponse.type = 'aggregate';
+          } else if (parsedResponse.operation === 'explain') {
+            parsedResponse.type = 'explain';
           } else {
             parsedResponse.type = 'query';
           }

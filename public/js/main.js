@@ -237,7 +237,59 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       const resultData = data.result;
-      if (Array.isArray(resultData)) {
+      
+      // Formato especial para operaciones de explain
+      if (data.operation === 'explain') {
+        responseText += `Análisis de plan de ejecución:\n\n`;
+        
+        // Extraer y mostrar información útil del plan de ejecución
+        if (resultData) {
+          // Mostrar información sobre el planificador de consultas si está disponible
+          if (resultData.queryPlanner) {
+            responseText += `Plan de consulta:\n`;
+            
+            // Namespace (colección)
+            if (resultData.queryPlanner.namespace) {
+              responseText += `- Colección: ${resultData.queryPlanner.namespace}\n`;
+            }
+            
+            // Plan ganador
+            if (resultData.queryPlanner.winningPlan) {
+              const winningPlan = resultData.queryPlanner.winningPlan;
+              responseText += `- Plan ganador: ${winningPlan.stage || 'N/A'}\n`;
+              
+              // Si hay un índice utilizado
+              if (winningPlan.inputStage && winningPlan.inputStage.indexName) {
+                responseText += `- Índice utilizado: ${winningPlan.inputStage.indexName}\n`;
+              }
+              
+              // Dirección del escaneo (adelante/atrás)
+              if (winningPlan.direction) {
+                responseText += `- Dirección: ${winningPlan.direction}\n`;
+              }
+            }
+            
+            // Planes rechazados
+            if (resultData.queryPlanner.rejectedPlans && resultData.queryPlanner.rejectedPlans.length > 0) {
+              responseText += `- Planes rechazados: ${resultData.queryPlanner.rejectedPlans.length}\n`;
+            }
+          }
+          
+          // Información de ejecución si está disponible
+          if (resultData.executionStats) {
+            const stats = resultData.executionStats;
+            responseText += `\nEstadísticas de ejecución:\n`;
+            responseText += `- Documentos examinados: ${stats.totalDocsExamined || 0}\n`;
+            responseText += `- Llaves examinadas: ${stats.totalKeysExamined || 0}\n`;
+            responseText += `- Documentos devueltos: ${stats.nReturned || 0}\n`;
+            responseText += `- Tiempo de ejecución: ${stats.executionTimeMillis || 0} ms\n`;
+          }
+          
+          // Plan completo en formato JSON
+          responseText += `\nPlan completo:\n`;
+          responseText += JSON.stringify(resultData, null, 2);
+        }
+      } else if (Array.isArray(resultData)) {
         responseText += `Encontrados: ${resultData.length} documento(s)\n\n`;
         if (resultData.length > 0) {
           const itemsToShow = Math.min(resultData.length, 5);

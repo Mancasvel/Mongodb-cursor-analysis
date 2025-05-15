@@ -79,6 +79,10 @@ class DbService {
         
         case 'aggregate':
           return await coll.aggregate(params.pipeline || []).toArray();
+          
+        case 'explain':
+          // Operación especial para análisis de planes de ejecución
+          return await this._executeExplain(coll, parsedQuery);
         
         default:
           throw new Error(`Operación no soportada: ${operation}`);
@@ -134,6 +138,67 @@ class DbService {
       return results;
     } catch (error) {
       console.error('Error en _executeFind:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Ejecuta un análisis de plan de ejecución (explain) para una operación específica
+   * @param {Collection} collection - Colección de MongoDB
+   * @param {Object} parsedQuery - Consulta procesada que contiene la operación a analizar
+   * @returns {Promise<Object>} - Resultado del explain con el plan de ejecución
+   */
+  async _executeExplain(collection, parsedQuery) {
+    try {
+      // La operación a explicar (find, aggregate, etc.)
+      const targetOperation = parsedQuery.explainOperation || parsedQuery.params?.operation || 'find';
+      // El nivel de verbosidad del explain (queryPlanner, executionStats, allPlansExecution)
+      const verbosity = parsedQuery.explainVerbosity || parsedQuery.params?.verbosity || 'queryPlanner';
+      
+      console.log(`Ejecutando explain para operación: ${targetOperation} con verbosidad: ${verbosity}`);
+      
+      // Según la operación a explicar, ejecutamos different tipos de explain
+      switch (targetOperation) {
+        case 'find':
+          const findQuery = parsedQuery.mongoQuery || {};
+          const findOptions = parsedQuery.params || {};
+          
+          // Crear el cursor para la consulta find
+          let cursor = collection.find(findQuery);
+          
+          // Aplicar opciones (limit, sort, etc.)
+          if (findOptions.limit) {
+            cursor = cursor.limit(parseInt(findOptions.limit));
+          }
+          if (findOptions.sort) {
+            cursor = cursor.sort(findOptions.sort);
+          }
+          if (findOptions.project) {
+            cursor = cursor.project(findOptions.project);
+          }
+          
+          // Ejecutar explain en el cursor
+          const explainResult = await cursor.explain(verbosity);
+          return explainResult;
+          
+        case 'aggregate':
+          const pipeline = parsedQuery.params?.pipeline || [];
+          
+          // Ejecutar explain en la agregación
+          const aggExplainResult = await collection.aggregate(pipeline, { explain: true });
+          return aggExplainResult;
+          
+        case 'count':
+          // Para count, usamos el countDocuments con explain
+          const countQuery = parsedQuery.mongoQuery || {};
+          const countExplainResult = await collection.countDocuments(countQuery, { explain: true });
+          return countExplainResult;
+          
+        default:
+          throw new Error(`Operación explain no soportada para: ${targetOperation}`);
+      }
+    } catch (error) {
+      console.error('Error al ejecutar explain:', error);
       throw error;
     }
   }
