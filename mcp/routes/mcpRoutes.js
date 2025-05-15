@@ -37,7 +37,7 @@ router.post('/query', async (req, res) => {
       success: true,
       sessionId: session,
       operation: parsedQuery.operation,
-      collection: parsedQuery.collection || 'cursores',
+      collection: parsedQuery.collection || 'cursors',
       result,
       // Incluir metadatos útiles
       metadata: {

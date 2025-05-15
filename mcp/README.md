@@ -240,3 +240,16 @@ Entre las ventajas de usar OpenRouter están:
 ## Licencia
 
 ISC 
+
+## Recomendaciones para el uso correcto del modelo por defecto
+
+- El modelo por defecto está optimizado para instrucciones en inglés. Para obtener los mejores resultados, formula tus consultas en inglés.
+- Ejemplo de consulta:
+
+```
+give me all the cursors from sevilla
+```
+
+Esto devolverá todos los documentos de la colección `cursors` donde el campo `ciudad` sea "Sevilla".
+
+- Si usas instrucciones en español, el modelo puede no mapear correctamente los campos. Por eso, se recomienda usar inglés para las consultas. 

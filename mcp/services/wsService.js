@@ -112,7 +112,7 @@ class WebSocketService {
       this.sendMessage(ws, {
         type: 'result',
         operation: parsedQuery.operation,
-        collection: parsedQuery.collection || 'cursores',
+        collection: parsedQuery.collection || 'cursors',
         result,
         metadata: {
           resultCount: Array.isArray(result) ? result.length : 1,

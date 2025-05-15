@@ -61,11 +61,19 @@ class NLPService {
     const systemPrompt = {
       role: 'system',
       content: `Eres un asistente especializado en convertir consultas en lenguaje natural a operaciones de MongoDB.
+      Estas son las columnas reales de la colección principal:
+      - nombre (String)
+      - edad (Number)
+      - ciudad (String)
+      - fechaCreacion (Date)
+      - createdAt (Date)
+      - updatedAt (Date)
+      Utiliza siempre estos nombres de campo exactamente como aparecen cuando generes la consulta MongoDB.
       Analiza la consulta del usuario y devuelve un JSON con el siguiente formato:
       {
         "type": "query|update|insert|delete|aggregate",
         "operation": "find|findOne|updateOne|updateMany|insertOne|insertMany|deleteOne|deleteMany|aggregate",
-        "collection": "nombre de la colección (por defecto: cursores)",
+        "collection": "nombre de la colección (por defecto: cursors)",
         "params": { parámetros específicos según el tipo de operación },
         "mongoQuery": { la consulta MongoDB correspondiente }
       }
@@ -104,7 +112,103 @@ class NLPService {
         console.log('Respuesta del modelo procesada:', cleanedContent);
         
         // Parsear la respuesta JSON
-        const parsedResponse = JSON.parse(cleanedContent);
+        let parsedResponse = {};
+        try {
+          parsedResponse = JSON.parse(cleanedContent);
+        } catch (parseError) {
+          console.error('Error al parsear JSON. Contenido recibido:', content);
+          console.error('Error:', parseError);
+          
+          // Intentar recuperar un JSON válido del texto
+          const jsonMatch = cleanedContent.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            try {
+              parsedResponse = JSON.parse(jsonMatch[0]);
+              console.log('Recuperado JSON válido de la respuesta:', jsonMatch[0]);
+            } catch (e) {
+              throw new Error(`No se pudo parsear la respuesta como JSON: ${content}`);
+            }
+          } else {
+            throw new Error(`No se pudo parsear la respuesta como JSON: ${content}`);
+          }
+        }
+        
+        // Asegurarse de que todos los campos necesarios estén presentes
+        if (!parsedResponse.operation) {
+          parsedResponse.operation = 'find'; // Por defecto, operación find
+        }
+        
+        if (!parsedResponse.type) {
+          // Inferir el tipo basado en la operación
+          if (parsedResponse.operation.startsWith('find')) {
+            parsedResponse.type = 'query';
+          } else if (parsedResponse.operation.startsWith('update')) {
+            parsedResponse.type = 'update';
+          } else if (parsedResponse.operation.startsWith('insert')) {
+            parsedResponse.type = 'insert';
+          } else if (parsedResponse.operation.startsWith('delete')) {
+            parsedResponse.type = 'delete';
+          } else if (parsedResponse.operation === 'aggregate') {
+            parsedResponse.type = 'aggregate';
+          } else {
+            parsedResponse.type = 'query';
+          }
+        }
+        
+        // Asegurarse de que la colección sea 'cursors' si no se especifica
+        if (!parsedResponse.collection) {
+          parsedResponse.collection = 'cursors';
+        }
+        
+        // Asegurarse de que mongoQuery sea un objeto
+        if (!parsedResponse.mongoQuery) {
+          parsedResponse.mongoQuery = {};
+        }
+        
+        // Asegurarse de que params sea un objeto
+        if (!parsedResponse.params) {
+          parsedResponse.params = {};
+        }
+        
+        // Fallback: Si la consulta del usuario menciona una ciudad y mongoQuery no la incluye, añadirla
+        if (typeof instruction === 'string' && parsedResponse && parsedResponse.mongoQuery && Object.keys(parsedResponse.mongoQuery).length === 0) {
+          const ciudadMatch = instruction.match(/(?:de|en) ([A-ZÁÉÍÓÚÑa-záéíóúñ]+)/);
+          if (ciudadMatch && ciudadMatch[1]) {
+            parsedResponse.mongoQuery.ciudad = ciudadMatch[1];
+            console.log('Fallback: Añadido filtro de ciudad a mongoQuery:', ciudadMatch[1]);
+          }
+        }
+        
+        // Mapeo de campos del inglés al español según la base de datos
+        const fieldMap = {
+          city: 'ciudad',
+          name: 'nombre',
+          age: 'edad',
+          creationDate: 'fechaCreacion',
+          createdAt: 'createdAt',
+          updatedAt: 'updatedAt'
+        };
+        
+        // Función para mapear las claves de un objeto
+        function mapFields(obj) {
+          if (!obj || typeof obj !== 'object') return obj;
+          const mapped = {};
+          for (const key in obj) {
+            const newKey = fieldMap[key] || key;
+            mapped[newKey] = obj[key];
+          }
+          return mapped;
+        }
+        
+        // Mapear mongoQuery y params si es necesario
+        if (parsedResponse.mongoQuery) {
+          parsedResponse.mongoQuery = mapFields(parsedResponse.mongoQuery);
+        }
+        if (parsedResponse.params) {
+          parsedResponse.params = mapFields(parsedResponse.params);
+        }
+        
+        console.log('Consulta final procesada:', JSON.stringify(parsedResponse, null, 2));
         return parsedResponse;
       } catch (e) {
         console.error('Error al parsear JSON. Contenido recibido:', content);

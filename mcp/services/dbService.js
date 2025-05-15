@@ -3,17 +3,15 @@ const config = require('../config/config');
 
 class DbService {
   constructor() {
-    // Reutilizamos la conexión a MongoDB que ya está establecida en app.js
-    // Si la conexión no está establecida, la configuramos aquí
-    if (mongoose.connection.readyState === 0) {
-      mongoose.connect(config.mongodb.uri, config.mongodb.options)
-        .then(() => {
-          console.log('Servicio MCP conectado a MongoDB Atlas');
-        })
-        .catch((err) => {
-          console.error('Error al conectar servicio MCP a MongoDB Atlas:', err);
-        });
-    }
+    // Siempre establecer la conexión a MongoDB para asegurar que estamos conectados a la base correcta
+    mongoose.connect(config.mongodb.uri, config.mongodb.options)
+      .then(() => {
+        console.log('Servicio MCP conectado a MongoDB Atlas');
+        console.log('URI de conexión:', config.mongodb.uri.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@')); // Ocultar credenciales en el log
+      })
+      .catch((err) => {
+        console.error('Error al conectar servicio MCP a MongoDB Atlas:', err);
+      });
   }
 
   /**
@@ -23,8 +21,12 @@ class DbService {
    */
   async executeOperation(parsedQuery) {
     try {
+      console.log('Ejecutando operación con parsedQuery:', JSON.stringify(parsedQuery, null, 2));
+      
       const { type, operation, collection, params, mongoQuery } = parsedQuery;
-      const collectionName = collection || 'cursores';
+      const collectionName = collection || 'cursors';
+      
+      console.log(`Operación: ${operation} en colección: ${collectionName}`);
       
       // Obtenemos la colección de MongoDB
       const db = mongoose.connection.db;
@@ -33,20 +35,33 @@ class DbService {
       // Ejecutamos la operación correspondiente
       switch (operation) {
         case 'find':
-          return await this._executeFind(coll, mongoQuery, params);
+          // Para find, asegurarnos de que mongoQuery es un objeto válido
+          const query = mongoQuery || {};
+          // Procesar los parámetros de find (limit, sort, project)
+          const findParams = params || {};
+          
+          // Si hay un parámetro limit en la raíz de parsedQuery, usarlo
+          if (parsedQuery.limit && !findParams.limit) {
+            findParams.limit = parsedQuery.limit;
+          }
+          
+          console.log('Find con query:', JSON.stringify(query));
+          console.log('Find con params:', JSON.stringify(findParams));
+          
+          return await this._executeFind(coll, query, findParams);
         
         case 'findOne':
-          return await coll.findOne(mongoQuery);
+          return await coll.findOne(mongoQuery || {});
         
         case 'updateOne':
           return await coll.updateOne(
-            mongoQuery,
+            mongoQuery || {},
             params.update || { $set: params }
           );
         
         case 'updateMany':
           return await coll.updateMany(
-            mongoQuery,
+            mongoQuery || {},
             params.update || { $set: params }
           );
         
@@ -57,10 +72,10 @@ class DbService {
           return await coll.insertMany(params);
         
         case 'deleteOne':
-          return await coll.deleteOne(mongoQuery);
+          return await coll.deleteOne(mongoQuery || {});
         
         case 'deleteMany':
-          return await coll.deleteMany(mongoQuery);
+          return await coll.deleteMany(mongoQuery || {});
         
         case 'aggregate':
           return await coll.aggregate(params.pipeline || []).toArray();
@@ -82,25 +97,45 @@ class DbService {
    * @returns {Promise<Array>} - Resultados de la consulta
    */
   async _executeFind(collection, query, params = {}) {
-    let cursor = collection.find(query);
-    
-    // Aplicar límite si se especifica
-    if (params.limit) {
-      cursor = cursor.limit(params.limit);
+    try {
+      console.log('Ejecutando find con query:', JSON.stringify(query));
+      console.log('Parámetros:', JSON.stringify(params));
+      
+      // Asegurar que query es un objeto válido
+      const safeQuery = query || {};
+      
+      // Iniciar la consulta
+      let cursor = collection.find(safeQuery);
+      
+      // Aplicar límite si se especifica
+      if (params && params.limit) {
+        const limit = parseInt(params.limit);
+        if (!isNaN(limit) && limit > 0) {
+          console.log('Aplicando límite:', limit);
+          cursor = cursor.limit(limit);
+        }
+      }
+      
+      // Aplicar ordenación si se especifica
+      if (params && params.sort) {
+        console.log('Aplicando ordenación:', params.sort);
+        cursor = cursor.sort(params.sort);
+      }
+      
+      // Aplicar proyección si se especifica
+      if (params && params.project) {
+        console.log('Aplicando proyección:', params.project);
+        cursor = cursor.project(params.project);
+      }
+      
+      // Ejecutar la consulta y devolver los resultados
+      const results = await cursor.toArray();
+      console.log(`Encontrados ${results.length} documentos`);
+      return results;
+    } catch (error) {
+      console.error('Error en _executeFind:', error);
+      throw error;
     }
-    
-    // Aplicar ordenación si se especifica
-    if (params.sort) {
-      cursor = cursor.sort(params.sort);
-    }
-    
-    // Aplicar proyección si se especifica
-    if (params.project) {
-      cursor = cursor.project(params.project);
-    }
-    
-    // Ejecutar la consulta y devolver los resultados
-    return await cursor.toArray();
   }
   
   /**

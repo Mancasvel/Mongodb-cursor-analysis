@@ -44,6 +44,7 @@ server.listen(PORT, () => {
   console.log(`Servidor MCP escuchando en el puerto ${PORT}`);
   console.log(`API REST disponible en: http://localhost:${PORT}/api/mcp`);
   console.log(`WebSocket disponible en: ws://localhost:${PORT}`);
+  console.log(`Base de datos: ${config.mongodb.uri ? 'Configurada' : 'No configurada'}`);
 });
 
 // Manejar señales de terminación
