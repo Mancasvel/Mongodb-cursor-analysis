@@ -134,7 +134,7 @@ La aplicación incluye una funcionalidad educativa para simular el comportamient
 - Uso de índices
 - Tiempo de ejecución
 
-## MCP: MongoDB Cursor Protocol
+## Uso de MCP para MongoDB:
 
 El MCP (Model Context Protocol) es un servidor que permite interactuar con MongoDB Atlas mediante lenguaje natural o instrucciones de texto simples, tanto por API REST como por WebSocket. Convierte tus consultas en lenguaje natural en operaciones MongoDB reales, soportando contexto de sesión, imágenes y más.
 
