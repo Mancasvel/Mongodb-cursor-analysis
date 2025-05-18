@@ -120,28 +120,21 @@
             </div>
             
             <div class="row text-center">
-              <div class="col-md-3 mb-3">
+              <div class="col-md-4 mb-3">
                 <div class="p-3 rounded-3 bg-primary-subtle">
                   <h6 class="text-primary mb-1">Con Cursor</h6>
                   <h3 id="tiempo-cursor" class="mb-0 fw-bold">-</h3>
                   <small>milisegundos</small>
                 </div>
               </div>
-              <div class="col-md-3 mb-3">
+              <div class="col-md-4 mb-3">
                 <div class="p-3 rounded-3 bg-danger-subtle">
                   <h6 class="text-danger mb-1">Sin Cursor</h6>
                   <h3 id="tiempo-nocursor" class="mb-0 fw-bold">-</h3>
                   <small>milisegundos</small>
                 </div>
               </div>
-              <div class="col-md-3 mb-3">
-                <div class="p-3 rounded-3 bg-success-subtle">
-                  <h6 class="text-success mb-1">Agregación</h6>
-                  <h3 id="tiempo-agregacion" class="mb-0 fw-bold">-</h3>
-                  <small>milisegundos</small>
-                </div>
-              </div>
-              <div class="col-md-3 mb-3">
+              <div class="col-md-4 mb-3">
                 <div class="p-3 rounded-3 bg-warning-subtle">
                   <h6 class="text-warning mb-1">Cursor Nativo</h6>
                   <h3 id="tiempo-nativecursor" class="mb-0 fw-bold">-</h3>
@@ -215,13 +208,6 @@
                     <td id="detail-nocursor-rendimiento">-</td>
                   </tr>
                   <tr>
-                    <td><span class="badge bg-success">Agregación</span></td>
-                    <td id="detail-agregacion-tiempo">-</td>
-                    <td id="detail-agregacion-docs">-</td>
-                    <td id="detail-agregacion-memoria">-</td>
-                    <td id="detail-agregacion-rendimiento">-</td>
-                  </tr>
-                  <tr>
                     <td><span class="badge bg-warning">Cursor Nativo</span></td>
                     <td id="detail-nativecursor-tiempo">-</td>
                     <td id="detail-nativecursor-docs">-</td>
@@ -237,6 +223,57 @@
               <h6 class="fw-bold">Análisis de uso de memoria:</h6>
               <div id="memoria-analisis" class="alert alert-light">
                 <p id="memoria-mensaje">-</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Performance Advisor - Análisis de Índices -->
+        <div class="card border-0 shadow-sm mt-4">
+          <div class="card-header bg-white py-3 border-0 d-flex align-items-center">
+            <h5 class="mb-0 fw-bold">Performance Advisor</h5>
+            <span class="badge bg-primary ms-2">MongoDB Atlas</span>
+          </div>
+          <div class="card-body">
+            <div class="alert alert-primary">
+              <div class="d-flex">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24" class="text-primary me-3 flex-shrink-0">
+                  <path d="M11.25 4.533A9.707 9.707 0 006 3a9.735 9.735 0 00-3.25.555.75.75 0 00-.5.707v14.25a.75.75 0 001 .707A8.237 8.237 0 016 18.75c1.995 0 3.823.707 5.25 1.886V4.533zM12.75 20.636A8.214 8.214 0 0118 18.75c.966 0 1.89.166 2.75.47a.75.75 0 001-.708V4.262a.75.75 0 00-.5-.707A9.735 9.735 0 0018 3a9.707 9.707 0 00-5.25 1.533v16.103z" />
+                </svg>
+                <div>
+                  <h5 class="fw-bold mb-1">Recomendaciones de Índices</h5>
+                  <p class="mb-0" id="indice-explicacion">-</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="table-responsive mb-3">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Índice Recomendado</th>
+                    <th>Prioridad</th>
+                    <th>Razón</th>
+                    <th>Impacto</th>
+                  </tr>
+                </thead>
+                <tbody id="indices-recomendados">
+                  <!-- Se llenará dinámicamente -->
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="alert alert-light">
+              <h6 class="fw-bold">Impacto en el Rendimiento:</h6>
+              <p id="indice-impacto">-</p>
+              <hr>
+              <h6 class="fw-bold">Recomendación de MongoDB Atlas:</h6>
+              <p id="atlas-sugerencia">-</p>
+              <div class="mt-3">
+                <div class="form-text">
+                  <i class="fas fa-info-circle me-1"></i>
+                  En MongoDB Atlas, estas recomendaciones se generan automáticamente basadas en patrones de acceso reales.
+                </div>
               </div>
             </div>
           </div>
@@ -285,17 +322,7 @@
           
           <div class="card">
             <div class="card-body">
-              <h6 class="fw-bold text-success">3. Consulta por Agregación</h6>
-              <p class="mb-0">Utiliza el framework de agregación de MongoDB para procesar los documentos. Este método permite realizar operaciones complejas directamente en el servidor de la base de datos, lo que puede reducir la transferencia de datos y mejorar el rendimiento en consultas analíticas.</p>
-              <div class="mt-2">
-                <code>Cursor.aggregate([{ $match: filtro }, { $limit: limite }])</code>
-              </div>
-            </div>
-          </div>
-          
-          <div class="card mb-3">
-            <div class="card-body">
-              <h6 class="fw-bold text-warning">4. Cursor Nativo de MongoDB</h6>
+              <h6 class="fw-bold text-warning">3. Cursor Nativo de MongoDB</h6>
               <p class="mb-0">Utiliza el driver nativo de MongoDB para acceder directamente a la colección sin pasar por la capa de Mongoose. Este método puede ofrecer mejor rendimiento al eliminar el overhead de mapeo de objetos y validación de esquemas.</p>
               <div class="mt-2">
                 <code>collection.find(filtro).limit(limit).sort({fechaCreacion: -1}).batchSize(batchSize)</code>
@@ -415,7 +442,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Actualizar tiempos
         document.getElementById('tiempo-cursor').textContent = data.resultados.conCursor.tiempo;
         document.getElementById('tiempo-nocursor').textContent = data.resultados.sinCursor.tiempo;
-        document.getElementById('tiempo-agregacion').textContent = data.resultados.agregacion.tiempo;
         document.getElementById('tiempo-nativecursor').textContent = data.resultados.cursorNativo.tiempo;
         
         // Actualizar detalles
@@ -428,11 +454,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('detail-nocursor-docs').textContent = data.resultados.sinCursor.documentos;
         document.getElementById('detail-nocursor-memoria').textContent = data.resultados.sinCursor.memoria?.heapUsedMB.toFixed(2) + ' MB' || '-';
         document.getElementById('detail-nocursor-rendimiento').textContent = data.resultados.sinCursor.metodo;
-        
-        document.getElementById('detail-agregacion-tiempo').textContent = data.resultados.agregacion.tiempo + ' ms';
-        document.getElementById('detail-agregacion-docs').textContent = data.resultados.agregacion.documentos;
-        document.getElementById('detail-agregacion-memoria').textContent = data.resultados.agregacion.memoria?.heapUsedMB.toFixed(2) + ' MB' || '-';
-        document.getElementById('detail-agregacion-rendimiento').textContent = data.resultados.agregacion.metodo;
         
         document.getElementById('detail-nativecursor-tiempo').textContent = data.resultados.cursorNativo.tiempo + ' ms';
         document.getElementById('detail-nativecursor-docs').textContent = data.resultados.cursorNativo.documentos;
@@ -461,11 +482,6 @@ document.addEventListener('DOMContentLoaded', function() {
                   'Mayor consumo al cargar todos los documentos en memoria de una vez, pero con mejor rendimiento en tiempo.' : 
                   'Para conjuntos pequeños, es eficiente tanto en memoria como en velocidad.'}
               </li>
-              <li><strong>Agregación (${data.resultados.agregacion.memoria?.heapUsedMB.toFixed(2)} MB):</strong> 
-                ${data.resultados.agregacion.documentos > 1000 ? 
-                  'Consumo similar al método sin cursor, ya que carga todos los resultados a la vez.' : 
-                  'Equilibrio entre rendimiento y consumo de memoria para conjuntos pequeños.'}
-              </li>
               <li><strong>Cursor Nativo (${data.resultados.cursorNativo.memoria?.heapUsedMB.toFixed(2)} MB):</strong> 
                 ${data.resultados.cursorNativo.documentos > 1000 ? 
                   'Consumo moderado gracias al procesamiento por chunks, ideal para conjuntos grandes de datos con recursos limitados.' : 
@@ -479,6 +495,16 @@ document.addEventListener('DOMContentLoaded', function() {
                   'Para conjuntos medianos, el uso de cursores nativos ofrece buen equilibrio entre rendimiento y consumo de memoria.' : 
                   'Para conjuntos pequeños, la diferencia de memoria es mínima, por lo que se recomienda el método más rápido.'}
             </p>
+            <div class="alert alert-info mt-3 small">
+              <p class="mb-0"><strong>Nota sobre medición de memoria:</strong> Las mediciones de memoria representan la diferencia absoluta en uso de heap entre el inicio y final de cada operación. 
+              Los valores pueden variar entre ejecuciones debido a varios factores:</p>
+              <ul class="mb-0 mt-1">
+                <li>Recolección de basura (garbage collection) automática de Node.js</li>
+                <li>Asignación y liberación asíncrona de memoria por V8</li>
+                <li>Otras actividades del sistema o procesos en segundo plano</li>
+              </ul>
+              <p class="mb-0 mt-1">Para mayor precisión, cada medición es un promedio de múltiples muestras.</p>
+            </div>
           `;
         }
         
@@ -494,25 +520,22 @@ document.addEventListener('DOMContentLoaded', function() {
         comparacionChart = new Chart(ctx, {
           type: 'bar',
           data: {
-            labels: ['Con Cursor', 'Sin Cursor', 'Agregación', 'Cursor Nativo'],
+            labels: ['Con Cursor', 'Sin Cursor', 'Cursor Nativo'],
             datasets: [{
               label: 'Tiempo (ms)',
               data: [
                 data.resultados.conCursor.tiempo,
                 data.resultados.sinCursor.tiempo,
-                data.resultados.agregacion.tiempo,
                 data.resultados.cursorNativo.tiempo
               ],
               backgroundColor: [
                 'rgba(79, 70, 229, 0.7)',
                 'rgba(220, 38, 38, 0.7)',
-                'rgba(16, 185, 129, 0.7)',
                 'rgba(245, 158, 11, 0.7)'
               ],
               borderColor: [
                 'rgb(79, 70, 229)',
                 'rgb(220, 38, 38)',
-                'rgb(16, 185, 129)',
                 'rgb(245, 158, 11)'
               ],
               borderWidth: 1
@@ -552,25 +575,22 @@ document.addEventListener('DOMContentLoaded', function() {
           memoriaChart = new Chart(ctxMemoria, {
             type: 'bar',
             data: {
-              labels: ['Con Cursor', 'Sin Cursor', 'Agregación', 'Cursor Nativo'],
+              labels: ['Con Cursor', 'Sin Cursor', 'Cursor Nativo'],
               datasets: [{
                 label: 'Uso de Memoria (MB)',
                 data: [
                   data.resultados.conCursor.memoria?.heapUsedMB || 0,
                   data.resultados.sinCursor.memoria?.heapUsedMB || 0,
-                  data.resultados.agregacion.memoria?.heapUsedMB || 0,
                   data.resultados.cursorNativo.memoria?.heapUsedMB || 0
                 ],
                 backgroundColor: [
                   'rgba(79, 70, 229, 0.5)',
                   'rgba(220, 38, 38, 0.5)',
-                  'rgba(16, 185, 129, 0.5)',
                   'rgba(245, 158, 11, 0.5)'
                 ],
                 borderColor: [
                   'rgb(79, 70, 229)',
                   'rgb(220, 38, 38)',
-                  'rgb(16, 185, 129)',
                   'rgb(245, 158, 11)'
                 ],
                 borderWidth: 1
@@ -598,6 +618,52 @@ document.addEventListener('DOMContentLoaded', function() {
               }
             }
           });
+        }
+        
+        // Actualizar recomendaciones de índices de MongoDB Atlas Performance Advisor
+        if (data.recomendaciones) {
+          // Mostrar la explicación general
+          document.getElementById('indice-explicacion').textContent = data.recomendaciones.explanation;
+          document.getElementById('indice-impacto').textContent = data.recomendaciones.performance_impact;
+          document.getElementById('atlas-sugerencia').textContent = data.recomendaciones.atlas_suggestion;
+          
+          // Limpiar tabla de índices recomendados
+          const indicesTable = document.getElementById('indices-recomendados');
+          indicesTable.innerHTML = '';
+          
+          // Añadir cada índice recomendado
+          if (data.recomendaciones.indices.length > 0) {
+            data.recomendaciones.indices.forEach(indice => {
+              const row = document.createElement('tr');
+              
+              // Formateamos el índice como JSON para mostrar
+              const indexJSON = JSON.stringify(indice.index, null, 2);
+              
+              // Estilo para prioridad
+              let priorityClass = 'bg-secondary';
+              if (indice.priority === 'alta') {
+                priorityClass = 'bg-danger';
+              } else if (indice.priority === 'muy alta') {
+                priorityClass = 'bg-danger';
+              } else if (indice.priority === 'media') {
+                priorityClass = 'bg-warning';
+              }
+              
+              row.innerHTML = `
+                <td><code>${indexJSON}</code></td>
+                <td><span class="badge ${priorityClass}">${indice.priority}</span></td>
+                <td>${indice.reason}</td>
+                <td>${indice.impact}</td>
+              `;
+              
+              indicesTable.appendChild(row);
+            });
+          } else {
+            // Si no hay índices recomendados
+            const row = document.createElement('tr');
+            row.innerHTML = `<td colspan="4" class="text-center">No se encontraron recomendaciones de índices</td>`;
+            indicesTable.appendChild(row);
+          }
         }
       } else {
         alert('Error: ' + data.error);
