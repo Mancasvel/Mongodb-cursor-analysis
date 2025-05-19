@@ -35,7 +35,7 @@ async function estimateDocumentSize(collection, query = {}, sampleSize = 5) {
   }
 }
 
-// Listar todos los cursores (con paginación)
+// Listar todos los documentos (con paginación)
 router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -66,12 +66,12 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Formulario para crear un nuevo cursor
+// Formulario para crear un nuevo documento
 router.get('/nuevo', (req, res) => {
   res.render('cursores/nuevo');
 });
 
-// Crear un nuevo cursor
+// Crear un nuevo documento
 router.post('/', async (req, res) => {
   try {
     const { nombre, edad, ciudad } = req.body;
@@ -91,7 +91,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Formulario para editar un cursor existente
+// Formulario para editar un documento existente
 router.get('/:id/editar', async (req, res) => {
   try {
     const cursor = await Cursor.findById(req.params.id);
@@ -110,7 +110,7 @@ router.get('/:id/editar', async (req, res) => {
   }
 });
 
-// Actualizar un cursor existente
+// Actualizar un documento existente
 router.put('/:id', async (req, res) => {
   try {
     const { nombre, edad, ciudad } = req.body;
@@ -136,7 +136,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Eliminar un cursor
+// Eliminar un documento existente
 router.delete('/:id', async (req, res) => {
   try {
     const cursor = await Cursor.findByIdAndDelete(req.params.id);
@@ -255,7 +255,7 @@ router.get('/:id/ejecutar', async (req, res) => {
     const cursorId = req.params.id;
     const queryStats = getQueryStats();
     
-    // Verificar que el cursor exista
+    // Verificar que el documento exista
     const cursorExiste = await Cursor.findById(cursorId);
     if (!cursorExiste) {
       return res.status(404).json({ 
